@@ -4,7 +4,8 @@ from openai import OpenAI
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-load_dotenv()
+# 使用 override=True 确保 .env 文件中的配置能覆盖系统环境变量
+load_dotenv(override=True)
 
 class LLMClient:
     def __init__(self):
