@@ -1,0 +1,43 @@
+# Python 虚拟环境
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+
+# Python 编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE 和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 其他
+*.log
