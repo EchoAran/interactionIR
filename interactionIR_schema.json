@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/interactionir.schema.json",
+  "title": "InteractionIRSchema",
+  "type": "object",
+  "required": [
+    "meta",
+    "slots",
+    "current_checkpoint",
+    "active_intentions",
+    "history"
+  ],
+  "properties": {
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/slotInstance"
+      }
+    },
+    "current_checkpoint": {
+      "type": "string"
+    },
+    "active_intentions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/historyEntry"
+      }
+    }
+  },
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "interaction_id",
+        "domain_id",
+        "domain_version",
+        "created_at",
+        "status"
+      ],
+      "properties": {
+        "interaction_id": {
+          "type": "string"
+        },
+        "domain_id": {
+          "type": "string"
+        },
+        "domain_version": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "paused", "completed"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "slotInstance": {
+      "type": "object",
+      "required": [
+        "slot_id",
+        "slot_key",
+        "title",
+        "type",
+        "status",
+        "value",
+        "confidence"
+      ],
+      "properties": {
+        "slot_id": {
+          "type": "string"
+        },
+        "slot_key": {
+          "type": "string",
+          "description": "对应 domain package 中的 blueprint slot_key"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "value": {},
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "source_turn_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "frozen": {
+          "type": "boolean",
+          "default": false
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "historyEntry": {
+      "type": "object",
+      "required": [
+        "turn_id",
+        "user_input",
+        "parsed_intentions",
+        "slot_updates",
+        "selected_policy_ids",
+        "selected_act_type",
+        "timestamp"
+      ],
+      "properties": {
+        "turn_id": {
+          "type": "string"
+        },
+        "user_input": {
+          "type": "string"
+        },
+        "parsed_intentions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "slot_updates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/slotUpdate"
+          }
+        },
+        "selected_policy_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selected_act_type": {
+          "type": "string"
+        },
+        "checkpoint_before": {
+          "type": "string"
+        },
+        "checkpoint_after": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "slotUpdate": {
+      "type": "object",
+      "required": [
+        "slot_id",
+        "operation"
+      ],
+      "properties": {
+        "slot_id": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "create",
+            "fill",
+            "update",
+            "mark_ambiguous",
+            "mark_conflict",
+            "freeze"
+          ]
+        },
+        "old_value": {},
+        "new_value": {}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

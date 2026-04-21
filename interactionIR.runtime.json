@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "interaction_id": "ir-f78ccef5f610",
+    "domain_id": "requirements_interview",
+    "domain_version": "v2",
+    "created_at": "2026-04-21T13:01:51+00:00",
+    "updated_at": "2026-04-21T13:05:11+00:00",
+    "status": "active"
+  },
+  "slots": [
+    {
+      "slot_id": "slot_goal_ca317c8e",
+      "slot_key": "goal",
+      "title": "需求目标",
+      "type": "text",
+      "status": "unfilled",
+      "value": "",
+      "confidence": 0.0,
+      "source_turn_ids": [],
+      "frozen": false
+    },
+    {
+      "slot_id": "slot_success_criteria_1bb8e6f2",
+      "slot_key": "success_criteria",
+      "title": "成功标准",
+      "type": "array",
+      "status": "unfilled",
+      "value": [],
+      "confidence": 0.0,
+      "source_turn_ids": [],
+      "frozen": false
+    },
+    {
+      "slot_id": "slot_roles_93b16bd4",
+      "slot_key": "roles",
+      "title": "参与角色",
+      "type": "array",
+      "status": "unfilled",
+      "value": [],
+      "confidence": 0.0,
+      "source_turn_ids": [],
+      "frozen": false
+    },
+    {
+      "slot_id": "slot_user_scenario_bd22d8d9",
+      "slot_key": "user_scenario",
+      "title": "用户使用场景",
+      "type": "array",
+      "status": "unfilled",
+      "value": [],
+      "confidence": 0.0,
+      "source_turn_ids": [],
+      "frozen": false
+    },
+    {
+      "slot_id": "slot_main_flow_dd7eb45c",
+      "slot_key": "main_flow",
+      "title": "主流程",
+      "type": "array",
+      "status": "unfilled",
+      "value": [],
+      "confidence": 0.0,
+      "source_turn_ids": [],
+      "frozen": false
+    },
+    {
+      "slot_id": "slot_rules_constraints_807fd8d5",
+      "slot_key": "rules_constraints",
+      "title": "规则与约束",
+      "type": "array",
+      "status": "unfilled",
+      "value": [],
+      "confidence": 0.0,
+      "source_turn_ids": [],
+      "frozen": false
+    }
+  ],
+  "current_checkpoint": "context_seeded",
+  "active_intentions": [
+    "answer_slot"
+  ],
+  "history": [
+    {
+      "turn_id": "turn_1",
+      "user_input": "我想开发一个web聊天室",
+      "parsed_intentions": [
+        "answer_slot"
+      ],
+      "slot_updates": [],
+      "selected_policy_ids": [
+        "policy_broad_explore"
+      ],
+      "selected_act_type": "act_collect_missing_information",
+      "checkpoint_before": "context_seeded",
+      "checkpoint_after": "context_seeded",
+      "timestamp": "2026-04-21T13:02:11+00:00"
+    },
+    {
+      "turn_id": "turn_2",
+      "user_input": "核心目标就是做一个稳定好用的多人在线web聊天室，主要解决小团队、小圈子没法实时在线沟通的问题，主要面向公司内部小团队、兴趣小组、小型社群这类用户，典型场景就是日常实时聊天、临时开会沟通、线上小活动交流。判定成功的话，首先页面打开加载不超过3秒，同时在线50人不卡顿不闪退，消息发送后1秒内送达显示，不能出现丢消息的情况；定性上就是界面简洁好上手，不用教就能直接用，能正常发文字、看聊天记录就行。",
+      "parsed_intentions": [
+        "answer_slot"
+      ],
+      "slot_updates": [],
+      "selected_policy_ids": [
+        "policy_broad_explore"
+      ],
+      "selected_act_type": "act_collect_missing_information",
+      "checkpoint_before": "context_seeded",
+      "checkpoint_after": "context_seeded",
+      "timestamp": "2026-04-21T13:05:11+00:00"
+    }
+  ]
+}

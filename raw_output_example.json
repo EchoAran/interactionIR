@@ -1,0 +1,33 @@
+{
+    "current_checkpoint": "core_problem_aligned",
+    "active_intentions": [ 
+        "answer_slot"
+    ], 
+    "selected_policy_ids": [ 
+        "p_deep_drill" 
+    ], 
+    "policy_constraints": { 
+        "question_style": "deep_drill_down", 
+        "max_questions": 2, 
+        "tone_constraint": "neutral", 
+        "must_focus_on_slots": true 
+    }, 
+    "selected_act_type": "ask_for_slot",
+    "focus_slots": [ 
+        { 
+            "slot_id": "slot_success_criteria_9a65561a",
+            "slot_key": "success_criteria",
+            "title": "Success Criteria",
+            "status": "unfilled",
+            "value": [] 
+        }, 
+        { 
+            "slot_id": "slot_roles_5c8871a4", 
+            "slot_key": "roles", 
+            "title": "Participating Roles", 
+            "status": "unfilled", 
+            "value": [] 
+        }
+    ], 
+    "interaction_summary": "当前checkpoint为 core_problem_aligned。已形成 1 个较明确槽，仍有 4 个待补充或待完善槽。" 
+}

@@ -1,0 +1,582 @@
+{
+  "domain_id": "requirements_interview",
+  "version": "v2",
+  "description": "用于需求访谈场景的通用领域包。目标是围绕需求目标、成功标准、参与角色、使用场景、主流程、规则约束、边界假设等信息槽，逐步完成需求收集、澄清、对齐与收束。",
+  "parser_guidance": {
+    "allowed_routes": [
+      "update_slots",
+      "switch_topic",
+      "redirect_to_interview",
+      "skip_actuator"
+    ],
+    "instruction": "优先判断用户当前输入是在补充信息、修正已有信息、切换需求主题、偏离主线，还是提出与当前访谈无关的请求。candidate_slot_values 只提取有直接文本依据的内容，不要臆造。"
+  },
+  "slot_blueprint_catalog": [
+    {
+      "blueprint_id": "bp_goal",
+      "slot_key": "goal",
+      "title": "需求目标",
+      "description": "项目想解决什么问题、想达成什么目标。",
+      "value_type": "text",
+      "status_enum": ["unfilled", "partial", "filled", "ambiguous", "conflict", "frozen"],
+      "allow_multiple_values": false,
+      "creation_rule": {
+        "create_at_init": true
+      },
+      "update_rule": {
+        "allow_direct_overwrite_when_frozen": false,
+        "must_mark_conflict": true,
+        "require_source_trace": true,
+        "require_confidence": true
+      },
+      "freeze_rule": {
+        "freeze_at_checkpoints": ["core_problem_aligned", "requirements_draft_ready"]
+      },
+      "renderer": {
+        "title_for_agent": "需求目标",
+        "value_hint": "可继续追问目标背后的业务动机、痛点和期望收益。",
+        "missing_hint": "需要问清楚这个系统究竟要解决什么问题、服务什么目的。"
+      }
+    },
+    {
+      "blueprint_id": "bp_success_criteria",
+      "slot_key": "success_criteria",
+      "title": "成功标准",
+      "description": "如何判断需求落地后是成功的，包括效果指标、质量目标、业务结果。",
+      "value_type": "array",
+      "status_enum": ["unfilled", "partial", "filled", "ambiguous", "conflict", "frozen"],
+      "allow_multiple_values": true,
+      "creation_rule": {
+        "create_at_init": true
+      },
+      "update_rule": {
+        "allow_direct_overwrite_when_frozen": false,
+        "must_mark_conflict": true,
+        "require_source_trace": true,
+        "require_confidence": true
+      },
+      "freeze_rule": {
+        "freeze_at_checkpoints": ["requirements_draft_ready"]
+      },
+      "renderer": {
+        "title_for_agent": "成功标准",
+        "value_hint": "可追问性能、体验、业务结果、上线验收方式等。",
+        "missing_hint": "需要问清楚用户希望用什么标准来判断这个需求是否成功。"
+      }
+    },
+    {
+      "blueprint_id": "bp_roles",
+      "slot_key": "roles",
+      "title": "参与角色",
+      "description": "谁会使用、管理、维护、审批或受到这个系统影响。",
+      "value_type": "array",
+      "status_enum": ["unfilled", "partial", "filled", "ambiguous", "conflict", "frozen"],
+      "allow_multiple_values": true,
+      "creation_rule": {
+        "create_at_init": true
+      },
+      "update_rule": {
+        "allow_direct_overwrite_when_frozen": false,
+        "must_mark_conflict": true,
+        "require_source_trace": true,
+        "require_confidence": true
+      },
+      "renderer": {
+        "title_for_agent": "参与角色",
+        "value_hint": "可继续区分主要用户、次要用户、管理员、运营方等。",
+        "missing_hint": "需要问清楚谁是主要使用者、谁负责管理、谁会受到影响。"
+      }
+    },
+    {
+      "blueprint_id": "bp_user_scenario",
+      "slot_key": "user_scenario",
+      "title": "用户使用场景",
+      "description": "用户会在什么业务情境下使用系统。",
+      "value_type": "array",
+      "status_enum": ["unfilled", "partial", "filled", "ambiguous", "conflict", "frozen"],
+      "allow_multiple_values": true,
+      "creation_rule": {
+        "create_at_init": true
+      },
+      "update_rule": {
+        "allow_direct_overwrite_when_frozen": false,
+        "must_mark_conflict": true,
+        "require_source_trace": true,
+        "require_confidence": true
+      },
+      "freeze_rule": {
+        "freeze_at_checkpoints": ["scope_baselined", "requirements_draft_ready"]
+      },
+      "renderer": {
+        "title_for_agent": "用户使用场景",
+        "value_hint": "可继续问使用时机、频率、触发条件、使用环境。",
+        "missing_hint": "需要问清楚用户会在什么场景下使用这个系统。"
+      }
+    },
+    {
+      "blueprint_id": "bp_main_flow",
+      "slot_key": "main_flow",
+      "title": "主流程",
+      "description": "用户完成核心任务时的主要流程或关键步骤。",
+      "value_type": "array",
+      "status_enum": ["unfilled", "partial", "filled", "ambiguous", "conflict", "frozen"],
+      "allow_multiple_values": true,
+      "creation_rule": {
+        "create_at_init": true,
+        "create_on_checkpoint": ["core_problem_aligned"]
+      },
+      "update_rule": {
+        "allow_direct_overwrite_when_frozen": false,
+        "must_mark_conflict": true,
+        "require_source_trace": true,
+        "require_confidence": true
+      },
+      "freeze_rule": {
+        "freeze_at_checkpoints": ["requirements_draft_ready"]
+      },
+      "renderer": {
+        "title_for_agent": "主流程",
+        "value_hint": "可追问从开始到完成的关键步骤、输入输出和转折点。",
+        "missing_hint": "需要问清楚这个需求的核心流程是怎样发生的。"
+      }
+    },
+    {
+      "blueprint_id": "bp_rules_constraints",
+      "slot_key": "rules_constraints",
+      "title": "规则与约束",
+      "description": "业务规则、权限限制、合规要求、非功能约束、技术限制等。",
+      "value_type": "array",
+      "status_enum": ["unfilled", "partial", "filled", "ambiguous", "conflict", "frozen"],
+      "allow_multiple_values": true,
+      "creation_rule": {
+        "create_at_init": true
+      },
+      "update_rule": {
+        "allow_direct_overwrite_when_frozen": false,
+        "must_mark_conflict": true,
+        "require_source_trace": true,
+        "require_confidence": true
+      },
+      "renderer": {
+        "title_for_agent": "规则与约束",
+        "value_hint": "可追问权限、性能、数据、合规、部署、对接限制等。",
+        "missing_hint": "需要问清楚有哪些必须遵守的规则、限制或约束。"
+      }
+    },
+    {
+      "blueprint_id": "bp_boundary_assumption",
+      "slot_key": "boundary_assumption",
+      "title": "边界与假设",
+      "description": "当前不做什么、默认前提是什么、哪些问题暂不纳入范围。",
+      "value_type": "array",
+      "status_enum": ["unfilled", "partial", "filled", "ambiguous", "conflict", "frozen"],
+      "allow_multiple_values": true,
+      "creation_rule": {
+        "create_at_init": false,
+        "create_on_intentions": ["answer_slot", "revise_previous_answer", "switch_topic"],
+        "create_on_checkpoint": ["scope_baselined"]
+      },
+      "update_rule": {
+        "allow_direct_overwrite_when_frozen": false,
+        "must_mark_conflict": true,
+        "require_source_trace": true,
+        "require_confidence": true
+      },
+      "renderer": {
+        "title_for_agent": "边界与假设",
+        "value_hint": "可追问哪些内容明确不做、哪些默认条件成立。",
+        "missing_hint": "需要问清楚需求边界、默认假设和暂不覆盖的内容。"
+      }
+    }
+  ],
+  "policy_catalog": [
+    {
+      "policy_id": "policy_broad_explore",
+      "name": "初期广泛探索",
+      "description": "优先帮助用户把问题空间铺开，先收集高层信息，再逐步细化。",
+      "applies_to_act_types": ["act_collect_missing_information", "act_clarify_information"],
+      "trigger": {
+        "checkpoints": ["context_seeded"],
+        "slot_status_any_of": ["unfilled", "partial"]
+      },
+      "constraints": {
+        "question_style": {
+          "value": "broad_exploration",
+          "instruction": "本轮提问应先覆盖高层背景与关键缺失信息，不要一开始就陷入非常细碎的实现细节。"
+        },
+        "max_questions": {
+          "value": 2,
+          "instruction": "本轮最多提出 2 个问题。"
+        },
+        "tone_constraint": {
+          "value": "neutral",
+          "instruction": "语气保持中性、专业、简洁。"
+        },
+        "must_focus_on_slots": {
+          "value": true,
+          "instruction": "问题必须紧扣当前焦点信息，不要无关扩散。"
+        }
+      },
+      "renderer": {
+        "instruction": "当前应采用广泛探索式访谈，优先补齐最关键的缺失信息。",
+        "notes": [
+          "可优先追问目标、成功标准、参与角色、使用场景等高层信息。"
+        ]
+      }
+    },
+    {
+      "policy_id": "policy_deep_drill",
+      "name": "中期深度挖掘",
+      "description": "围绕已有信息向下追问细节、条件、边界和判定标准。",
+      "applies_to_act_types": ["act_deepen_existing_information", "act_clarify_information", "act_resolve_conflict"],
+      "trigger": {
+        "checkpoints": ["core_problem_aligned", "scope_baselined"],
+        "slot_status_any_of": ["partial", "ambiguous", "conflict"]
+      },
+      "constraints": {
+        "question_style": {
+          "value": "deep_drill_down",
+          "instruction": "当前提问应围绕已有信息继续深挖，不要重新铺开整个问题空间。"
+        },
+        "max_questions": {
+          "value": 2,
+          "instruction": "本轮最多提出 2 个问题。"
+        },
+        "tone_constraint": {
+          "value": "neutral",
+          "instruction": "语气保持中性、专业、简洁。"
+        },
+        "must_focus_on_slots": {
+          "value": true,
+          "instruction": "问题必须集中在当前尚未收敛的信息槽上。"
+        }
+      },
+      "renderer": {
+        "instruction": "当前应采用深入追问式访谈，围绕已有信息继续补细节、边界和条件。"
+      }
+    },
+    {
+      "policy_id": "policy_hidden_alignment",
+      "name": "隐含信息对齐",
+      "description": "在主要信息基本齐备后，对齐默认前提、边界和遗漏条件。",
+      "applies_to_act_types": ["act_align_implicit_information", "act_summarize_and_confirm"],
+      "trigger": {
+        "checkpoints": ["requirements_draft_ready"],
+        "slot_status_any_of": ["partial", "filled", "frozen"]
+      },
+      "constraints": {
+        "question_style": {
+          "value": "hidden_alignment",
+          "instruction": "当前应补齐隐含但关键的信息，如边界、默认前提、异常情况和不做项。"
+        },
+        "max_questions": {
+          "value": 2,
+          "instruction": "本轮最多提出 2 个问题。"
+        },
+        "require_summary_before_transition": {
+          "value": true,
+          "instruction": "若准备结束访谈或转入需求整理，应先做一次简洁总结再确认。"
+        }
+      },
+      "renderer": {
+        "instruction": "当前应做隐含信息对齐，确认遗漏条件、边界与假设。"
+      }
+    },
+    {
+      "policy_id": "policy_gentle_redirect",
+      "name": "温和拉回主线",
+      "description": "当用户偏离当前访谈主线时，先承接，再温和拉回。",
+      "applies_to_act_types": ["act_redirect_to_interview"],
+      "trigger": {
+        "routes": ["redirect_to_interview"]
+      },
+      "constraints": {
+        "tone_constraint": {
+          "value": "gentle",
+          "instruction": "语气保持温和自然，不要让用户感到被打断或被纠正。"
+        },
+        "redirect_requirement": {
+          "value": "softly_return_to_interview_scope",
+          "instruction": "先承接用户刚才的话，再自然回到当前需求访谈主线。"
+        },
+        "max_questions": {
+          "value": 1,
+          "instruction": "拉回主线时尽量只提出一个核心问题。"
+        }
+      },
+      "renderer": {
+        "instruction": "当前应采用温和拉回式表达，先承接用户当前话题，再把交流引回访谈目标。"
+      }
+    },
+    {
+      "policy_id": "policy_wrap_up",
+      "name": "收束确认",
+      "description": "当信息基本齐备时，优先收束、总结并确认是否还需补充。",
+      "applies_to_act_types": ["act_summarize_and_confirm"],
+      "trigger": {
+        "completion_state_any_of": ["ready"]
+      },
+      "constraints": {
+        "question_style": {
+          "value": "wrap_up",
+          "instruction": "本轮不再发散追问，优先做总结、确认和收束。"
+        },
+        "tone_constraint": {
+          "value": "neutral",
+          "instruction": "语气保持中性、清晰、自然。"
+        },
+        "max_questions": {
+          "value": 1,
+          "instruction": "收束阶段只需要一个确认性问题即可。"
+        }
+      },
+      "renderer": {
+        "instruction": "当前信息已基本齐备，请优先总结已确认需求，并请用户确认是否还需补充或修正。"
+      }
+    }
+  ],
+  "act_catalog": [
+    {
+      "act_type": "act_collect_missing_information",
+      "description": "向用户追问当前缺失但关键的信息。",
+      "planner": {
+        "priority": 60,
+        "when": {
+          "slot_status_any": ["unfilled", "partial"],
+          "completion_state_any": ["not_ready"]
+        },
+        "focus": {
+          "source": "all_open",
+          "limit": 2
+        }
+      },
+      "renderer": {
+        "instruction": "请直接向用户提问，优先补齐当前最关键的缺失信息。",
+        "output_hint": "直接面向用户提出问题，避免解释内部状态。"
+      },
+      "tags": ["collect", "open_information"]
+    },
+    {
+      "act_type": "act_clarify_information",
+      "description": "澄清当前存在歧义、表述不清或理解空间过大的信息。",
+      "planner": {
+        "priority": 80,
+        "when": {
+          "slot_status_any": ["ambiguous"],
+          "completion_state_any": ["not_ready"]
+        },
+        "focus": {
+          "source": "ambiguous",
+          "limit": 2
+        }
+      },
+      "renderer": {
+        "instruction": "请围绕存在歧义的信息发起澄清式提问，帮助用户把意思说清楚。",
+        "output_hint": "优先澄清歧义，不要同时再打开太多新问题。"
+      },
+      "tags": ["clarify"]
+    },
+    {
+      "act_type": "act_resolve_conflict",
+      "description": "处理当前出现冲突的说法或不一致信息。",
+      "planner": {
+        "priority": 100,
+        "when": {
+          "slot_status_any": ["conflict"],
+          "completion_state_any": ["not_ready"]
+        },
+        "focus": {
+          "source": "conflict",
+          "limit": 2
+        }
+      },
+      "renderer": {
+        "instruction": "请先解决当前信息冲突，帮助用户在不同说法之间做确认或取舍。",
+        "output_hint": "语气保持客观，不要直接替用户下结论。"
+      },
+      "tags": ["conflict_resolution"]
+    },
+    {
+      "act_type": "act_deepen_existing_information",
+      "description": "对已有信息继续向下追问细节、条件、边界与关键判定标准。",
+      "planner": {
+        "priority": 50,
+        "when": {
+          "checkpoints_any": ["core_problem_aligned", "scope_baselined"],
+          "slot_status_any": ["partial", "filled", "frozen"],
+          "completion_state_any": ["not_ready"]
+        },
+        "focus": {
+          "source": "partial",
+          "limit": 2
+        }
+      },
+      "renderer": {
+        "instruction": "请围绕已有信息继续深挖，补足细节、规则、边界和验收口径。",
+        "output_hint": "优先基于已经出现的内容继续追问，不要重新开始高层探索。"
+      },
+      "tags": ["deepening"]
+    },
+    {
+      "act_type": "act_align_implicit_information",
+      "description": "补齐隐含但关键的信息，如默认前提、边界、异常情况和不做项。",
+      "planner": {
+        "priority": 70,
+        "when": {
+          "checkpoints_any": ["requirements_draft_ready"],
+          "completion_state_any": ["not_ready"]
+        },
+        "focus": {
+          "source": "all_open",
+          "limit": 2
+        }
+      },
+      "renderer": {
+        "instruction": "请针对边界、假设、遗漏条件和异常情况做补充性追问。",
+        "output_hint": "问题应帮助用户把隐含前提显性化。"
+      },
+      "tags": ["alignment"]
+    },
+    {
+      "act_type": "act_redirect_to_interview",
+      "description": "当用户偏离主线时，先承接，再把交流拉回当前访谈目标。",
+      "planner": {
+        "priority": 120,
+        "when": {
+          "routes_any": ["redirect_to_interview"]
+        },
+        "focus": {
+          "source": "none",
+          "limit": 0
+        }
+      },
+      "renderer": {
+        "instruction": "请先简短承接用户刚才的话，再把对话自然拉回当前需求访谈主线。",
+        "output_hint": "不要生硬打断，不要表现出否定或指责。"
+      },
+      "tags": ["redirect"]
+    },
+    {
+      "act_type": "act_summarize_and_confirm",
+      "description": "总结当前已确认的需求信息，并请用户确认是否还需要补充或修正。",
+      "planner": {
+        "priority": 200,
+        "when": {
+          "completion_state_any": ["ready"]
+        },
+        "focus": {
+          "source": "all_slots",
+          "limit": 20
+        }
+      },
+      "renderer": {
+        "instruction": "请先总结当前已确认的需求信息，再询问用户是否还需要补充、修正或确认结束访谈。",
+        "output_hint": "输出应以总结和确认为主，不要继续大范围追问。"
+      },
+      "completion_act": true,
+      "tags": ["completion", "wrap_up"]
+    }
+  ],
+  "checkpoint_catalog": [
+    {
+      "checkpoint_id": "context_seeded",
+      "label": "背景已建立",
+      "entry_conditions": [],
+      "freeze_slot_keys": [],
+      "preferred_policy_ids": ["policy_broad_explore"],
+      "preferred_act_types": ["act_collect_missing_information"],
+      "renderer": {
+        "description": "当前仍处在访谈早期，需要先帮助用户把需求背景、目标和关键缺失信息铺开。"
+      }
+    },
+    {
+      "checkpoint_id": "core_problem_aligned",
+      "label": "核心问题已对齐",
+      "entry_conditions": [
+        "goal.status in ['filled','frozen']"
+      ],
+      "freeze_slot_keys": ["goal"],
+      "preferred_policy_ids": ["policy_deep_drill"],
+      "preferred_act_types": ["act_collect_missing_information", "act_deepen_existing_information", "act_clarify_information"],
+      "renderer": {
+        "description": "当前需求目标已基本明确，后续应围绕关键缺失信息和已出现内容继续深入。"
+      }
+    },
+    {
+      "checkpoint_id": "scope_baselined",
+      "label": "范围已基线化",
+      "entry_conditions": [
+        "goal.status in ['filled','frozen']",
+        "user_scenario.status in ['filled','frozen']"
+      ],
+      "freeze_slot_keys": ["goal", "user_scenario"],
+      "preferred_policy_ids": ["policy_deep_drill"],
+      "preferred_act_types": ["act_deepen_existing_information", "act_resolve_conflict", "act_align_implicit_information"],
+      "renderer": {
+        "description": "当前已具备较清晰的目标和使用场景，应进一步明确规则、流程、边界与例外情况。"
+      }
+    },
+    {
+      "checkpoint_id": "requirements_draft_ready",
+      "label": "需求草案准备就绪",
+      "entry_conditions": [
+        "goal.status in ['filled','frozen']",
+        "success_criteria.status in ['filled','frozen']",
+        "roles.status in ['filled','frozen']",
+        "user_scenario.status in ['filled','frozen']",
+        "main_flow.status in ['filled','frozen']",
+        "rules_constraints.status in ['filled','frozen']"
+      ],
+      "freeze_slot_keys": ["goal", "success_criteria", "roles", "user_scenario", "main_flow", "rules_constraints"],
+      "preferred_policy_ids": ["policy_hidden_alignment", "policy_wrap_up"],
+      "preferred_act_types": ["act_align_implicit_information", "act_summarize_and_confirm"],
+      "renderer": {
+        "description": "当前主要需求信息已基本齐备，可以转向隐含信息对齐与访谈收束。",
+        "completion_instruction": "若当前已经没有明显缺口、歧义或冲突，应优先总结已确认需求，并请用户确认是否结束访谈。",
+        "wrap_up_instruction": "收束时先概括关键需求，再询问用户是否仍有补充或修正。"
+      }
+    }
+  ],
+  "intention_catalog": [
+    {
+      "intention_type": "answer_slot",
+      "description": "用户正在补充、回答或说明某个需求信息槽。",
+      "route": "update_slots",
+      "renderer": {
+        "instruction": "用户当前在补充需求信息。"
+      }
+    },
+    {
+      "intention_type": "revise_previous_answer",
+      "description": "用户在修正之前给出的需求信息。",
+      "route": "update_slots",
+      "renderer": {
+        "instruction": "用户当前在修正已有信息。"
+      }
+    },
+    {
+      "intention_type": "switch_topic",
+      "description": "用户试图切换到新的需求主题或子主题。",
+      "route": "switch_topic",
+      "renderer": {
+        "instruction": "用户当前在切换访谈焦点。"
+      }
+    },
+    {
+      "intention_type": "off_topic",
+      "description": "用户当前输入偏离了需求访谈主线。",
+      "route": "redirect_to_interview",
+      "renderer": {
+        "instruction": "用户当前偏离了需求访谈主线。"
+      }
+    },
+    {
+      "intention_type": "other_request",
+      "description": "用户提出了与当前访谈无关的额外请求。",
+      "route": "skip_actuator",
+      "renderer": {
+        "instruction": "用户当前提出了与本轮访谈主线无关的请求。"
+      }
+    }
+  ]
+}

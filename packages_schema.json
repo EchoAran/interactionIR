@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/packages_schema.json",
+  "title": "DomainPackageSchema",
+  "type": "object",
+  "required": [
+    "domain_id",
+    "version",
+    "slot_blueprint_catalog",
+    "policy_catalog",
+    "act_catalog",
+    "checkpoint_catalog",
+    "intention_catalog"
+  ],
+  "properties": {
+    "domain_id": {"type": "string"},
+    "version": {"type": "string"},
+    "description": {"type": "string"},
+    "parser_guidance": {
+      "type": "object",
+      "properties": {
+        "allowed_routes": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "instruction": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "slot_blueprint_catalog": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/slotBlueprint"}
+    },
+    "policy_catalog": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/policySpec"}
+    },
+    "act_catalog": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/actSpec"}
+    },
+    "checkpoint_catalog": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/checkpointSpec"}
+    },
+    "intention_catalog": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/intentionSpec"}
+    }
+  },
+  "$defs": {
+    "slotBlueprint": {
+      "type": "object",
+      "required": [
+        "blueprint_id",
+        "slot_key",
+        "title",
+        "value_type",
+        "status_enum",
+        "creation_rule",
+        "update_rule"
+      ],
+      "properties": {
+        "blueprint_id": {"type": "string"},
+        "slot_key": {"type": "string"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "value_type": {
+          "type": "string",
+          "enum": ["string", "text", "number", "boolean", "enum", "array", "object"]
+        },
+        "status_enum": {"type": "array", "items": {"type": "string"}},
+        "allow_multiple_values": {"type": "boolean", "default": false},
+        "creation_rule": {
+          "type": "object",
+          "properties": {
+            "create_at_init": {"type": "boolean", "default": true},
+            "create_on_intentions": {"type": "array", "items": {"type": "string"}},
+            "create_on_checkpoint": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "update_rule": {
+          "type": "object",
+          "properties": {
+            "allow_direct_overwrite_when_frozen": {"type": "boolean", "default": false},
+            "must_mark_conflict": {"type": "boolean", "default": true},
+            "require_source_trace": {"type": "boolean", "default": true},
+            "require_confidence": {"type": "boolean", "default": true}
+          },
+          "additionalProperties": false
+        },
+        "freeze_rule": {
+          "type": "object",
+          "properties": {
+            "freeze_at_checkpoints": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "renderer": {
+          "type": "object",
+          "properties": {
+            "title_for_agent": {"type": "string"},
+            "value_hint": {"type": "string"},
+            "missing_hint": {"type": "string"}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "policySpec": {
+      "type": "object",
+      "required": ["policy_id", "name", "trigger"],
+      "properties": {
+        "policy_id": {"type": "string"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "applies_to_act_types": {"type": "array", "items": {"type": "string"}},
+        "trigger": {
+          "type": "object",
+          "properties": {
+            "checkpoints": {"type": "array", "items": {"type": "string"}},
+            "intentions": {"type": "array", "items": {"type": "string"}},
+            "routes": {"type": "array", "items": {"type": "string"}},
+            "slot_status_any_of": {"type": "array", "items": {"type": "string"}},
+            "completion_state_any_of": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "constraints": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {"type": ["string", "number", "boolean"]},
+              {
+                "type": "object",
+                "properties": {
+                  "value": {},
+                  "instruction": {"type": "string"},
+                  "label": {"type": "string"},
+                  "description": {"type": "string"}
+                },
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "renderer": {
+          "type": "object",
+          "properties": {
+            "instruction": {"type": "string"},
+            "notes": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "actSpec": {
+      "type": "object",
+      "required": ["act_type", "description"],
+      "properties": {
+        "act_type": {"type": "string"},
+        "description": {"type": "string"},
+        "planner": {
+          "type": "object",
+          "properties": {
+            "priority": {"type": "number"},
+            "when": {
+              "type": "object",
+              "properties": {
+                "routes_any": {"type": "array", "items": {"type": "string"}},
+                "intentions_any": {"type": "array", "items": {"type": "string"}},
+                "slot_status_any": {"type": "array", "items": {"type": "string"}},
+                "checkpoints_any": {"type": "array", "items": {"type": "string"}},
+                "completion_state_any": {"type": "array", "items": {"type": "string"}}
+              },
+              "additionalProperties": false
+            },
+            "focus": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "matched_status",
+                    "unfilled",
+                    "ambiguous",
+                    "conflict",
+                    "partial",
+                    "all_open",
+                    "all_slots",
+                    "none"
+                  ]
+                },
+                "limit": {"type": "integer", "minimum": 0, "default": 2}
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "renderer": {
+          "type": "object",
+          "properties": {
+            "instruction": {"type": "string"},
+            "output_hint": {"type": "string"}
+          },
+          "additionalProperties": true
+        },
+        "completion_act": {"type": "boolean", "default": false},
+        "tags": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "checkpointSpec": {
+      "type": "object",
+      "required": ["checkpoint_id", "label"],
+      "properties": {
+        "checkpoint_id": {"type": "string"},
+        "label": {"type": "string"},
+        "entry_conditions": {"type": "array", "items": {"type": "string"}},
+        "freeze_slot_keys": {"type": "array", "items": {"type": "string"}},
+        "preferred_policy_ids": {"type": "array", "items": {"type": "string"}},
+        "preferred_act_types": {"type": "array", "items": {"type": "string"}},
+        "renderer": {
+          "type": "object",
+          "properties": {
+            "description": {"type": "string"},
+            "completion_instruction": {"type": "string"},
+            "wrap_up_instruction": {"type": "string"}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "intentionSpec": {
+      "type": "object",
+      "required": ["intention_type", "description", "route"],
+      "properties": {
+        "intention_type": {"type": "string"},
+        "description": {"type": "string"},
+        "route": {"type": "string"},
+        "renderer": {
+          "type": "object",
+          "properties": {
+            "instruction": {"type": "string"}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
