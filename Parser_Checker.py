@@ -68,7 +68,7 @@ class ParserChecker:
                     "Goals:\n"
                     "1. Identify parsed_intentions using intention_catalog whenever possible.\n"
                     "2. Identify target_slot_keys that are directly touched by the user input.\n"
-                    "3. candidate_slot_values must be conservative and directly supported by the user input.\n"
+                    "3. candidate_slot_values must be conservative and directly supported by the user input. Provide it as a list of objects, e.g., [{\"slot_key\": \"...\", \"value\": \"...\", \"confidence\": 0.9}].\n"
                     f"4. route must be one of: {allowed_routes}.\n"
                     "5. need_invoke_actuator should be false only when this turn should skip the interview actuator.\n"
                     "6. Do not invent missing details.\n"
@@ -114,6 +114,7 @@ class ParserChecker:
                     "2. Preserve the user's wording as much as possible.\n"
                     "3. For array slots, return a JSON array. For text slots, return a string.\n"
                     "4. If nothing can be safely extracted for a slot, do not output that slot.\n"
+                    "5. candidate_slot_values MUST be a list of objects, e.g., [{\"slot_key\": \"...\", \"value\": \"...\", \"confidence\": 0.9}].\n"
                     "Output JSON keys: candidate_slot_values, notes"
                 ),
             },
@@ -134,7 +135,19 @@ class ParserChecker:
         normalized: Dict[str, Any] = {"candidate_slot_values": [], "notes": []}
         raw_candidates = raw.get("candidate_slot_values", [])
         print(f"[DEBUG] _fallback_extract_slot_values raw LLM output: {json.dumps(raw, ensure_ascii=False)[:500]}")  # 调试输出
-        if isinstance(raw_candidates, list):
+        if isinstance(raw_candidates, dict):
+            for k, v in raw_candidates.items():
+                slot_key = str(k).strip()
+                if not slot_key:
+                    continue
+                normalized["candidate_slot_values"].append(
+                    {
+                        "slot_key": slot_key,
+                        "value": v,
+                        "confidence": 0.8,
+                    }
+                )
+        elif isinstance(raw_candidates, list):
             for item in raw_candidates:
                 if not isinstance(item, dict):
                     continue
@@ -208,7 +221,20 @@ class ParserChecker:
 
         candidate_slot_values: List[Dict[str, Any]] = []
         raw_candidates = raw.get("candidate_slot_values", [])
-        if isinstance(raw_candidates, list):
+        if isinstance(raw_candidates, dict):
+            for k, v in raw_candidates.items():
+                slot_key = str(k).strip()
+                if not slot_key or slot_key not in allowed_slot_keys:
+                    continue
+                normalized = {
+                    "slot_key": slot_key,
+                    "value": v,
+                    "confidence": 0.8,
+                }
+                candidate_slot_values.append(normalized)
+                if slot_key not in target_slot_keys:
+                    target_slot_keys.append(slot_key)
+        elif isinstance(raw_candidates, list):
             for item in raw_candidates:
                 if not isinstance(item, dict):
                     continue
@@ -220,7 +246,7 @@ class ParserChecker:
                 normalized = {
                     "slot_key": slot_key,
                     "value": item.get("value"),
-                    "confidence": self._safe_confidence(item.get("confidence", 0.0)),
+                    "confidence": self._safe_confidence(item.get("confidence", 0.8)),
                 }
                 candidate_slot_values.append(normalized)
                 if slot_key not in target_slot_keys:
