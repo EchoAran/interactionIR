@@ -113,12 +113,6 @@
           },
           "additionalProperties": false
         },
-        "constraints": {
-          "type": "object",
-          "additionalProperties": {
-            "type": ["string", "number", "boolean"]
-          }
-        },
         "renderer": {
           "type": "object",
           "properties": {

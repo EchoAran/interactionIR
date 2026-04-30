@@ -150,14 +150,8 @@
         "checkpoints": ["context_seeded"],
         "slot_status_any_of": ["unfilled", "partial"]
       },
-      "constraints": {
-        "question_style": "broad_exploration",
-        "max_questions": 2,
-        "tone_constraint": "neutral",
-        "must_focus_on_slots": true
-      },
       "renderer": {
-        "instruction": "当前应采用广泛探索式访谈，优先补齐最关键的缺失信息。",
+        "instruction": "当前应采用广泛探索式访谈，优先补齐最关键的缺失信息。本轮最多提出 2 个问题，语气保持中性、专业、简洁；问题必须紧扣当前焦点信息，不要无关扩散。",
         "notes": [
           "可优先追问目标、成功标准、参与角色、使用场景等高层信息。"
         ]
@@ -171,14 +165,8 @@
         "checkpoints": ["core_problem_aligned", "scope_baselined"],
         "slot_status_any_of": ["partial", "ambiguous", "conflict"]
       },
-      "constraints": {
-        "question_style": "deep_drill_down",
-        "max_questions": 2,
-        "tone_constraint": "neutral",
-        "must_focus_on_slots": true
-      },
       "renderer": {
-        "instruction": "当前应采用深入追问式访谈，围绕已有信息继续补细节、边界和条件。"
+        "instruction": "当前应采用深入追问式访谈，围绕已有信息继续补细节、边界和条件。本轮最多提出 2 个问题，语气保持中性、专业、简洁；问题必须集中在当前尚未收敛的信息槽上。"
       }
     },
     {
@@ -189,13 +177,8 @@
         "checkpoints": ["requirements_draft_ready"],
         "slot_status_any_of": ["partial", "filled", "frozen"]
       },
-      "constraints": {
-        "question_style": "hidden_alignment",
-        "max_questions": 2,
-        "require_summary_before_transition": true
-      },
       "renderer": {
-        "instruction": "当前应做隐含信息对齐，确认遗漏条件、边界与假设。"
+        "instruction": "当前应做隐含信息对齐，确认遗漏条件、边界与假设。本轮最多提出 2 个问题。若准备结束访谈或转入需求整理，应先做一次简洁总结再确认。"
       }
     },
     {
@@ -205,13 +188,8 @@
       "trigger": {
         "intentions": ["off_topic"]
       },
-      "constraints": {
-        "tone_constraint": "gentle",
-        "redirect_requirement": "softly_return_to_interview_scope",
-        "max_questions": 1
-      },
       "renderer": {
-        "instruction": "当前应采用温和拉回式表达，先承接用户当前话题，再把交流引回访谈目标。"
+        "instruction": "当前应采用温和拉回式表达，先承接用户当前话题，再把交流引回访谈目标。语气保持温和自然，不要让用户感到被打断或被纠正；拉回主线时尽量只提出一个核心问题。"
       }
     },
     {
@@ -221,13 +199,8 @@
       "trigger": {
         "completion_state_any_of": ["ready"]
       },
-      "constraints": {
-        "question_style": "wrap_up",
-        "tone_constraint": "neutral",
-        "max_questions": 1
-      },
       "renderer": {
-        "instruction": "当前信息已基本齐备，请优先总结已确认需求，并请用户确认是否还需补充或修正。"
+        "instruction": "当前信息已基本齐备，请优先总结已确认需求，并请用户确认是否还需补充或修正。语气保持中性、清晰、自然；收束阶段只需要一个确认性问题即可。"
       }
     }
   ],

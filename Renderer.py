@@ -161,15 +161,6 @@ class Renderer:
             base = self._first_text(renderer.get("instruction"), policy.get("description"))
             if base:
                 lines.append(base)
-            constraints = policy.get("constraints", {}) if isinstance(policy.get("constraints", {}), dict) else {}
-            for key, raw in constraints.items():
-                if isinstance(raw, dict):
-                    text = self._first_text(raw.get("instruction"), raw.get("description"), raw.get("label"))
-                    if text:
-                        lines.append(text)
-                    continue
-                if isinstance(raw, (str, int, float, bool)):
-                    lines.append(f"{key}: {raw}")
             notes = renderer.get("notes") if isinstance(renderer.get("notes"), list) else []
             for note in notes:
                 if isinstance(note, str) and note.strip():
