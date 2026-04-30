@@ -193,10 +193,6 @@ class Renderer:
             base = self._first_text(renderer.get("instruction"), policy.get("description"))
             if base:
                 lines.append(base)
-            notes = renderer.get("notes") if isinstance(renderer.get("notes"), list) else []
-            for note in notes:
-                if isinstance(note, str) and note.strip():
-                    lines.append(note.strip())
         deduped: List[str] = []
         for line in lines:
             if line not in deduped:

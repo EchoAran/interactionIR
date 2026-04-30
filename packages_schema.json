@@ -120,8 +120,7 @@
         "renderer": {
           "type": "object",
           "properties": {
-            "instruction": {"type": "string"},
-            "notes": {"type": "array", "items": {"type": "string"}}
+            "instruction": {"type": "string"}
           },
           "additionalProperties": true
         }
@@ -178,8 +177,7 @@
           },
           "additionalProperties": true
         },
-        "completion_act": {"type": "boolean", "default": false},
-        "tags": {"type": "array", "items": {"type": "string"}}
+        "completion_act": {"type": "boolean", "default": false}
       },
       "additionalProperties": false
     },

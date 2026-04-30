@@ -153,10 +153,7 @@
         ]
       },
       "renderer": {
-        "instruction": "当前应采用广泛探索式访谈，优先补齐最关键的缺失信息。本轮最多提出 2 个问题，语气保持中性、专业、简洁；问题必须紧扣当前焦点信息，不要无关扩散。",
-        "notes": [
-          "可优先追问目标、成功标准、参与角色、使用场景等高层信息。"
-        ]
+        "instruction": "当前应采用广泛探索式访谈，优先补齐最关键的缺失信息。本轮最多提出 2 个问题，语气保持中性、专业、简洁；问题必须紧扣当前焦点信息，不要无关扩散。"
       }
     },
     {
@@ -229,8 +226,7 @@
       "renderer": {
         "instruction": "请直接向用户提问，优先补齐当前最关键的缺失信息。",
         "output_hint": "直接面向用户提出问题，避免解释内部状态。"
-      },
-      "tags": ["collect", "open_information"]
+      }
     },
     {
       "act_type": "act_clarify_information",
@@ -250,8 +246,7 @@
       "renderer": {
         "instruction": "请围绕存在歧义的信息发起澄清式提问，帮助用户把意思说清楚。",
         "output_hint": "优先澄清歧义，不要同时再打开太多新问题。"
-      },
-      "tags": ["clarify"]
+      }
     },
     {
       "act_type": "act_resolve_conflict",
@@ -271,8 +266,7 @@
       "renderer": {
         "instruction": "请先解决当前信息冲突，帮助用户在不同说法之间做确认或取舍。",
         "output_hint": "语气保持客观，不要直接替用户下结论。"
-      },
-      "tags": ["conflict_resolution"]
+      }
     },
     {
       "act_type": "act_deepen_existing_information",
@@ -293,8 +287,7 @@
       "renderer": {
         "instruction": "请围绕已有信息继续深挖，补足细节、规则、边界和验收口径。",
         "output_hint": "优先基于已经出现的内容继续追问，不要重新开始高层探索。"
-      },
-      "tags": ["deepening"]
+      }
     },
     {
       "act_type": "act_align_implicit_information",
@@ -314,8 +307,7 @@
       "renderer": {
         "instruction": "请针对边界、假设、遗漏条件和异常情况做补充性追问。",
         "output_hint": "问题应帮助用户把隐含前提显性化。"
-      },
-      "tags": ["alignment"]
+      }
     },
     {
       "act_type": "act_redirect_to_interview",
@@ -332,8 +324,7 @@
       "renderer": {
         "instruction": "请先简短承接用户刚才的话，再把对话自然拉回当前需求访谈主线。",
         "output_hint": "不要生硬打断，不要表现出否定或指责。"
-      },
-      "tags": ["redirect"]
+      }
     },
     {
       "act_type": "act_summarize_and_confirm",
@@ -351,8 +342,7 @@
         "instruction": "请先总结当前已确认的需求信息，再询问用户是否还需要补充、修正或确认结束访谈。",
         "output_hint": "输出应以总结和确认为主，不要继续大范围追问。"
       },
-      "completion_act": true,
-      "tags": ["completion", "wrap_up"]
+      "completion_act": true
     }
   ],
   "turn_pipeline": [
