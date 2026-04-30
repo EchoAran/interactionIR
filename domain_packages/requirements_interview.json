@@ -215,7 +215,6 @@
       "act_type": "act_collect_missing_information",
       "description": "向用户追问当前缺失但关键的信息。",
       "planner": {
-        "priority": 60,
         "when": {
           "conditions": [
             "completion_state == 'not_ready'",
@@ -237,7 +236,6 @@
       "act_type": "act_clarify_information",
       "description": "澄清当前存在歧义、表述不清或理解空间过大的信息。",
       "planner": {
-        "priority": 80,
         "when": {
           "conditions": [
             "completion_state == 'not_ready'",
@@ -259,7 +257,6 @@
       "act_type": "act_resolve_conflict",
       "description": "处理当前出现冲突的说法或不一致信息。",
       "planner": {
-        "priority": 100,
         "when": {
           "conditions": [
             "completion_state == 'not_ready'",
@@ -281,7 +278,6 @@
       "act_type": "act_deepen_existing_information",
       "description": "对已有信息继续向下追问细节、条件、边界与关键判定标准。",
       "planner": {
-        "priority": 50,
         "when": {
           "conditions": [
             "completion_state == 'not_ready'",
@@ -304,7 +300,6 @@
       "act_type": "act_align_implicit_information",
       "description": "补齐隐含但关键的信息，如默认前提、边界、异常情况和不做项。",
       "planner": {
-        "priority": 70,
         "when": {
           "conditions": [
             "completion_state == 'not_ready'",
@@ -326,7 +321,6 @@
       "act_type": "act_redirect_to_interview",
       "description": "当用户偏离主线时，先承接，再把交流拉回当前访谈目标。",
       "planner": {
-        "priority": 120,
         "when": {
           "conditions": ["has_intention('off_topic')"]
         },
@@ -345,7 +339,6 @@
       "act_type": "act_summarize_and_confirm",
       "description": "总结当前已确认的需求信息，并请用户确认是否还需要补充或修正。",
       "planner": {
-        "priority": 200,
         "when": {
           "conditions": ["completion_state == 'ready'"]
         },

@@ -133,7 +133,6 @@
         "planner": {
           "type": "object",
           "properties": {
-            "priority": {"type": "number"},
             "when": {
               "type": "object",
               "properties": {

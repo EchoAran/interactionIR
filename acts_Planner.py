@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from condition_eval import ConditionEvaluator
 
@@ -38,54 +38,41 @@ class ActsPlanner:
                 preferred_act_types = self._normalize_id_list(checkpoint.get("preferred_act_types", []), "act_type")
                 break
 
-        candidates: List[Tuple[float, Dict[str, Any], List[str]]] = []
-        for act in domain_package.get("act_catalog", []):
-            act_type = self._extract_id(act, "act_type")
-            if not isinstance(act, dict) or not act_type:
-                continue
+        act_catalog = [a for a in domain_package.get("act_catalog", []) if isinstance(a, dict) and self._extract_id(a, "act_type")]
+        by_type = {self._extract_id(a, "act_type"): a for a in act_catalog}
+
+        matched_types_in_order: List[str] = []
+
+        def matches(act: Dict[str, Any]) -> bool:
             planner = act.get("planner", {}) if isinstance(act.get("planner", {}), dict) else {}
             when = planner.get("when", {}) if isinstance(planner.get("when", {}), dict) else {}
             conditions = when.get("conditions", [])
-            if not evaluator.evaluate_all(conditions, ctx):
+            return evaluator.evaluate_all(conditions, ctx)
+
+        for act_type in preferred_act_types:
+            act = by_type.get(act_type)
+            if not act:
                 continue
-            focus_slot_ids = self._resolve_focus_ids(planner, status_groups)
-            score = float(planner.get("priority", 0) or 0)
-            if act_type in preferred_act_types:
-                score += 1000.0
-            candidates.append((score, act, focus_slot_ids))
+            if matches(act):
+                matched_types_in_order.append(act_type)
 
-        if not candidates:
-            by_type = {
-                self._extract_id(a, "act_type"): a
-                for a in domain_package.get("act_catalog", [])
-                if isinstance(a, dict) and self._extract_id(a, "act_type")
-            }
-            for act_type in preferred_act_types:
-                if act_type in by_type:
-                    focus_slot_ids = self._resolve_focus_ids(by_type[act_type].get("planner", {}), status_groups)
-                    return {
-                        "selected_act_type": act_type,
-                        "focus_slot_ids": focus_slot_ids,
-                        "candidate_act_types": [act_type],
-                        "is_completion": completion_state == "ready" and bool(by_type[act_type].get("completion_act", False)),
-                    }
-            first_act = next((a for a in domain_package.get("act_catalog", []) if isinstance(a, dict) and self._extract_id(a, "act_type")), None)
-            if first_act is None:
-                return {"selected_act_type": None, "focus_slot_ids": [], "candidate_act_types": [], "is_completion": False}
-            first_act_type = self._extract_id(first_act, "act_type")
-            return {
-                "selected_act_type": first_act_type,
-                "focus_slot_ids": self._resolve_focus_ids(first_act.get("planner", {}), status_groups),
-                "candidate_act_types": [first_act_type],
-                "is_completion": bool(first_act.get("completion_act", False)) and completion_state == "ready",
-            }
+        for act in act_catalog:
+            act_type = self._extract_id(act, "act_type")
+            if act_type in matched_types_in_order:
+                continue
+            if matches(act):
+                matched_types_in_order.append(act_type)
 
-        candidates.sort(key=lambda item: item[0], reverse=True)
-        _, best_act, best_focus_ids = candidates[0]
+        if not matched_types_in_order:
+            return {"selected_act_type": None, "focus_slot_ids": [], "candidate_act_types": [], "is_completion": False}
+
+        best_act_type = matched_types_in_order[0]
+        best_act = by_type[best_act_type]
+        best_focus_ids = self._resolve_focus_ids(best_act.get("planner", {}), status_groups)
         return {
-            "selected_act_type": self._extract_id(best_act, "act_type"),
+            "selected_act_type": best_act_type,
             "focus_slot_ids": best_focus_ids,
-            "candidate_act_types": [self._extract_id(act, "act_type") for _, act, _ in candidates if self._extract_id(act, "act_type")],
+            "candidate_act_types": matched_types_in_order,
             "is_completion": bool(best_act.get("completion_act", False)) and completion_state == "ready",
         }
 
@@ -93,11 +80,10 @@ class ActsPlanner:
         focus = planner.get("focus", {}) if isinstance(planner.get("focus", {}), dict) else {}
         source = str(focus.get("source") or "none")
         limit = int(focus.get("limit", 2) or 2)
-        when = planner.get("when", {}) if isinstance(planner.get("when", {}), dict) else {}
-        status_any = self._normalize_scalar_list(when.get("slot_status_any", []))
 
         if source == "matched_status":
-            for status in status_any:
+            statuses = focus.get("statuses", [])
+            for status in self._normalize_scalar_list(statuses):
                 ids = status_groups.get(status, [])
                 if ids:
                     return ids[:limit]
