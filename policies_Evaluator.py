@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from condition_eval import ConditionEvaluator
+
 
 class PoliciesEvaluator:
     def evaluate(
@@ -15,6 +17,13 @@ class PoliciesEvaluator:
         active_intentions = [str(x) for x in parse_result.get("parsed_intentions", []) if x is not None]
         slot_statuses = [str(slot.get("status") or "") for slot in interaction_ir.get("slots", []) if isinstance(slot, dict)]
         completion_state = self._completion_state(slot_update_result)
+        evaluator = ConditionEvaluator()
+        ctx = {
+            "checkpoint": current_checkpoint,
+            "intentions": active_intentions,
+            "slot_statuses": slot_statuses,
+            "completion_state": completion_state,
+        }
 
         preferred_policy_ids: List[str] = []
         for checkpoint in domain_package.get("checkpoint_catalog", []):
@@ -30,7 +39,8 @@ class PoliciesEvaluator:
         policy_catalog = [p for p in domain_package.get("policy_catalog", []) if isinstance(p, dict)]
         for policy in policy_catalog:
             trigger = policy.get("trigger", {}) if isinstance(policy.get("trigger", {}), dict) else {}
-            if self._trigger_matches(trigger, current_checkpoint, active_intentions, slot_statuses, completion_state):
+            conditions = trigger.get("conditions", [])
+            if evaluator.evaluate_all(conditions, ctx):
                 policy_id = self._extract_id(policy, "policy_id")
                 if policy_id and policy_id not in selected_policy_ids:
                     selected_policy_ids.append(policy_id)
@@ -58,29 +68,6 @@ class PoliciesEvaluator:
         if slot_update_result.get("unfilled_slot_ids") or slot_update_result.get("ambiguous_slot_ids") or slot_update_result.get("conflict_slot_ids"):
             return "not_ready"
         return "ready"
-
-    def _trigger_matches(
-        self,
-        trigger: Dict[str, Any],
-        current_checkpoint: str,
-        active_intentions: List[str],
-        slot_statuses: List[str],
-        completion_state: str,
-    ) -> bool:
-        checkpoints = self._normalize_id_list(trigger.get("checkpoints", []), "checkpoint_id")
-        intentions = self._normalize_id_list(trigger.get("intentions", []), "intention_type")
-        status_any = [str(x) for x in trigger.get("slot_status_any_of", []) if x is not None]
-        completion_any = [str(x) for x in trigger.get("completion_state_any_of", []) if x is not None]
-
-        if checkpoints and current_checkpoint not in checkpoints:
-            return False
-        if intentions and not any(i in intentions for i in active_intentions):
-            return False
-        if status_any and not any(status in status_any for status in slot_statuses):
-            return False
-        if completion_any and completion_state not in completion_any:
-            return False
-        return bool(checkpoints or intentions or status_any or completion_any)
 
     def _normalize_id_list(self, values: Any, id_field: str) -> List[str]:
         out: List[str] = []

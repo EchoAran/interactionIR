@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
 
+from condition_eval import ConditionEvaluator
+
 
 class ActsPlanner:
     """Pure package-driven act planner.
@@ -22,6 +24,13 @@ class ActsPlanner:
         intentions = [str(x) for x in parse_result.get("parsed_intentions", []) if x is not None]
         completion_state = str(policy_result.get("completion_state") or "not_ready")
         status_groups = self._build_status_groups(interaction_ir, slot_update_result)
+        evaluator = ConditionEvaluator()
+        ctx = {
+            "checkpoint": current_checkpoint,
+            "intentions": intentions,
+            "slot_statuses": [str(slot.get("status") or "") for slot in interaction_ir.get("slots", []) if isinstance(slot, dict)],
+            "completion_state": completion_state,
+        }
 
         preferred_act_types: List[str] = []
         for checkpoint in domain_package.get("checkpoint_catalog", []):
@@ -36,7 +45,8 @@ class ActsPlanner:
                 continue
             planner = act.get("planner", {}) if isinstance(act.get("planner", {}), dict) else {}
             when = planner.get("when", {}) if isinstance(planner.get("when", {}), dict) else {}
-            if not self._when_matches(when, intentions, current_checkpoint, completion_state, status_groups):
+            conditions = when.get("conditions", [])
+            if not evaluator.evaluate_all(conditions, ctx):
                 continue
             focus_slot_ids = self._resolve_focus_ids(planner, status_groups)
             score = float(planner.get("priority", 0) or 0)
@@ -78,29 +88,6 @@ class ActsPlanner:
             "candidate_act_types": [self._extract_id(act, "act_type") for _, act, _ in candidates if self._extract_id(act, "act_type")],
             "is_completion": bool(best_act.get("completion_act", False)) and completion_state == "ready",
         }
-
-    def _when_matches(
-        self,
-        when: Dict[str, Any],
-        intentions: List[str],
-        current_checkpoint: str,
-        completion_state: str,
-        status_groups: Dict[str, List[str]],
-    ) -> bool:
-        intentions_any = self._normalize_id_list(when.get("intentions_any", []), "intention_type")
-        checkpoints_any = self._normalize_id_list(when.get("checkpoints_any", []), "checkpoint_id")
-        completion_any = self._normalize_scalar_list(when.get("completion_state_any", []))
-        status_any = self._normalize_scalar_list(when.get("slot_status_any", []))
-
-        if intentions_any and not any(i in intentions_any for i in intentions):
-            return False
-        if checkpoints_any and current_checkpoint not in checkpoints_any:
-            return False
-        if completion_any and completion_state not in completion_any:
-            return False
-        if status_any and not any(status_groups.get(status) for status in status_any):
-            return False
-        return bool(intentions_any or checkpoints_any or completion_any or status_any)
 
     def _resolve_focus_ids(self, planner: Dict[str, Any], status_groups: Dict[str, List[str]]) -> List[str]:
         focus = planner.get("focus", {}) if isinstance(planner.get("focus", {}), dict) else {}

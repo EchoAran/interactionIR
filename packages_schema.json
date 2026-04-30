@@ -106,10 +106,10 @@
         "trigger": {
           "type": "object",
           "properties": {
-            "checkpoints": {"type": "array", "items": {"type": "string"}},
-            "intentions": {"type": "array", "items": {"type": "string"}},
-            "slot_status_any_of": {"type": "array", "items": {"type": "string"}},
-            "completion_state_any_of": {"type": "array", "items": {"type": "string"}}
+            "conditions": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
           },
           "additionalProperties": false
         },
@@ -137,10 +137,10 @@
             "when": {
               "type": "object",
               "properties": {
-                "intentions_any": {"type": "array", "items": {"type": "string"}},
-                "slot_status_any": {"type": "array", "items": {"type": "string"}},
-                "checkpoints_any": {"type": "array", "items": {"type": "string"}},
-                "completion_state_any": {"type": "array", "items": {"type": "string"}}
+                "conditions": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                }
               },
               "additionalProperties": false
             },
