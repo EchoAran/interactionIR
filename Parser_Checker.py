@@ -4,6 +4,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from llm_client import OpenAICompatibleLLMClient, build_client
+from protocol import ALLOWED_ROUTES, ROUTE_REDIRECT_TO_INTERVIEW, ROUTE_SKIP_ACTUATOR
 
 
 class ParserChecker:
@@ -23,7 +24,7 @@ class ParserChecker:
             }
             for s in slots
         ]
-        allowed_routes = self._allowed_routes(domain_package)
+        allowed_routes = list(ALLOWED_ROUTES)
         parser_instruction = self._parser_instruction(domain_package)
         allowed_intentions = self._allowed_intentions(domain_package)
         allowed_slot_keys = self._allowed_slot_keys(domain_package)
@@ -194,7 +195,7 @@ class ParserChecker:
 
     def _needs_slot_extraction_fallback(self, result: Dict[str, Any]) -> bool:
         route = str(result.get("route") or "")
-        if route in {"skip_actuator", "redirect_to_interview"}:
+        if route in {ROUTE_SKIP_ACTUATOR, ROUTE_REDIRECT_TO_INTERVIEW}:
             return False
         return not bool(result.get("candidate_slot_values"))
 
@@ -278,22 +279,6 @@ class ParserChecker:
         result["route"] = route
         result["notes"] = notes
         return result
-
-    def _allowed_routes(self, domain_package: Dict[str, Any]) -> List[str]:
-        parser_guidance = domain_package.get("parser_guidance", {})
-        routes: List[str] = []
-        if isinstance(parser_guidance, dict):
-            configured = parser_guidance.get("allowed_routes")
-            if isinstance(configured, list):
-                routes.extend([str(x) for x in configured if str(x).strip()])
-        for item in domain_package.get("intention_catalog", []):
-            if isinstance(item, dict) and item.get("route"):
-                route = str(item.get("route"))
-                if route not in routes:
-                    routes.append(route)
-        if not routes:
-            routes = ["update_slots", "invoke_actuator", "skip_actuator"]
-        return routes
 
     def _allowed_intentions(self, domain_package: Dict[str, Any]) -> List[str]:
         out: List[str] = []
