@@ -121,7 +121,7 @@
           "type": "object",
           "properties": {
             "instruction": {"type": "string"},
-            "notes": {"type": "array", "items": {"type": "string"}}
+            "notes": false
           },
           "additionalProperties": true
         }
@@ -150,19 +150,7 @@
             "focus": {
               "type": "object",
               "properties": {
-                "source": {
-                  "type": "string",
-                  "enum": [
-                    "matched_status",
-                    "unfilled",
-                    "ambiguous",
-                    "conflict",
-                    "partial",
-                    "all_open",
-                    "all_slots",
-                    "none"
-                  ]
-                },
+                "statuses": {"type": "array", "items": {"type": "string"}},
                 "limit": {"type": "integer", "minimum": 0, "default": 2}
               },
               "additionalProperties": false
@@ -179,7 +167,7 @@
           "additionalProperties": true
         },
         "completion_act": {"type": "boolean", "default": false},
-        "tags": {"type": "array", "items": {"type": "string"}}
+        "tags": false
       },
       "additionalProperties": false
     },
