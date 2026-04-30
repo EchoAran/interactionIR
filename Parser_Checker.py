@@ -20,6 +20,7 @@ class ParserChecker:
                 "status": s.get("status"),
                 "value": s.get("value"),
                 "frozen": s.get("frozen", False),
+                "candidates": s.get("candidates", []),
             }
             for s in slots
         ]
@@ -66,10 +67,11 @@ class ParserChecker:
                     "1. Identify parsed_intentions using intention_catalog whenever possible.\n"
                     "2. Identify target_slot_keys that are directly touched by the user input.\n"
                     "3. candidate_slot_values must be conservative and directly supported by the user input. Provide it as a list of objects, e.g., [{\"slot_key\": \"...\", \"value\": \"...\", \"confidence\": 0.9}].\n"
-                    "4. Do not invent missing details.\n"
-                    f"5. Valid slot_keys are: {allowed_slot_keys}\n"
+                    "4. If the user is explicitly confirming one of the existing conflict candidates (or explicitly selecting between options), output resolved_slot_values as a list of objects, e.g., [{\"slot_key\": \"...\", \"value\": \"...\", \"confidence\": 0.9}]. Otherwise output an empty list.\n"
+                    "5. Do not invent missing details.\n"
+                    f"6. Valid slot_keys are: {allowed_slot_keys}\n"
                     f"Additional parser guidance: {parser_instruction}\n"
-                    "Output JSON keys: parsed_intentions, target_slot_keys, candidate_slot_values, notes"
+                    "Output JSON keys: parsed_intentions, target_slot_keys, candidate_slot_values, resolved_slot_values, notes"
                 ),
             },
             {
@@ -188,7 +190,7 @@ class ParserChecker:
         return result
 
     def _needs_slot_extraction_fallback(self, result: Dict[str, Any]) -> bool:
-        return not bool(result.get("candidate_slot_values"))
+        return not bool(result.get("candidate_slot_values")) and not bool(result.get("resolved_slot_values"))
 
     def _normalize_result(
         self,
@@ -243,6 +245,39 @@ class ParserChecker:
                 if slot_key not in target_slot_keys:
                     target_slot_keys.append(slot_key)
 
+        resolved_slot_values: List[Dict[str, Any]] = []
+        raw_resolved = raw.get("resolved_slot_values", [])
+        if isinstance(raw_resolved, dict):
+            for k, v in raw_resolved.items():
+                slot_key = str(k).strip()
+                if not slot_key or slot_key not in allowed_slot_keys:
+                    continue
+                normalized = {
+                    "slot_key": slot_key,
+                    "value": v,
+                    "confidence": 0.9,
+                }
+                resolved_slot_values.append(normalized)
+                if slot_key not in target_slot_keys:
+                    target_slot_keys.append(slot_key)
+        elif isinstance(raw_resolved, list):
+            for item in raw_resolved:
+                if not isinstance(item, dict):
+                    continue
+                slot_key = self._extract_scalar(item.get("slot_key"), ["slot_key", "id", "value", "name", "key"])
+                if not slot_key:
+                    slot_key = self._extract_scalar(item.get("slot"), ["slot_key", "id", "value", "name", "key"])
+                if not slot_key or slot_key not in allowed_slot_keys:
+                    continue
+                normalized = {
+                    "slot_key": slot_key,
+                    "value": item.get("value"),
+                    "confidence": self._safe_confidence(item.get("confidence", 0.9)),
+                }
+                resolved_slot_values.append(normalized)
+                if slot_key not in target_slot_keys:
+                    target_slot_keys.append(slot_key)
+
         notes: List[str] = []
         raw_notes = raw.get("notes", [])
         if isinstance(raw_notes, list):
@@ -254,6 +289,7 @@ class ParserChecker:
         result["parsed_intentions"] = parsed_intentions
         result["target_slot_keys"] = target_slot_keys
         result["candidate_slot_values"] = candidate_slot_values
+        result["resolved_slot_values"] = resolved_slot_values
         result["notes"] = notes
         return result
 

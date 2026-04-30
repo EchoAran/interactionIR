@@ -115,6 +115,19 @@
         },
         "note": {
           "type": "string"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["value", "turn_id"],
+            "properties": {
+              "value": {},
+              "turn_id": {"type": "string"},
+              "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false
@@ -191,6 +204,8 @@
             "update",
             "mark_ambiguous",
             "mark_conflict",
+            "add_candidate",
+            "resolve_conflict",
             "freeze"
           ]
         },

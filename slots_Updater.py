@@ -16,6 +16,44 @@ class SlotsUpdater:
         checkpoint_before = str(interaction_ir.get("current_checkpoint") or "")
         slot_updates: List[Dict[str, Any]] = []
 
+        for resolved in parse_result.get("resolved_slot_values", []):
+            if not isinstance(resolved, dict):
+                continue
+            slot_key = str(resolved.get("slot_key") or "")
+            if not slot_key or slot_key not in blueprints_by_key:
+                continue
+            slot = slots_by_key.get(slot_key)
+            if slot is None:
+                slot = self._create_slot_from_blueprint(blueprints_by_key[slot_key], domain_package)
+                slots.append(slot)
+                slots_by_key[slot_key] = slot
+                slot_updates.append({
+                    "slot_id": slot["slot_id"],
+                    "operation": "create",
+                    "old_value": None,
+                    "new_value": slot.get("value"),
+                })
+
+            update_rule = blueprints_by_key[slot_key].get("update_rule", {}) if isinstance(blueprints_by_key[slot_key].get("update_rule", {}), dict) else {}
+            if slot.get("frozen") and not update_rule.get("allow_direct_overwrite_when_frozen", False):
+                continue
+
+            old_value = slot.get("value")
+            new_value = resolved.get("value")
+            slot["value"] = new_value
+            slot["status"] = "filled" if not self._is_empty_value(new_value) else "unfilled"
+            slot["confidence"] = max(0.0, min(1.0, float(resolved.get("confidence", 0.9) or 0.9)))
+            slot["candidates"] = []
+            source_turn_ids = slot.setdefault("source_turn_ids", [])
+            if turn_id not in source_turn_ids:
+                source_turn_ids.append(turn_id)
+            slot_updates.append({
+                "slot_id": slot.get("slot_id"),
+                "operation": "resolve_conflict",
+                "old_value": old_value,
+                "new_value": slot.get("value"),
+            })
+
         for candidate in parse_result.get("candidate_slot_values", []):
             if not isinstance(candidate, dict):
                 continue
@@ -35,8 +73,8 @@ class SlotsUpdater:
                     "new_value": slot.get("value"),
                 })
 
-            update = self._apply_candidate(slot, blueprints_by_key[slot_key], candidate, turn_id)
-            if update:
+            updates = self._apply_candidate(slot, blueprints_by_key[slot_key], candidate, turn_id)
+            for update in updates:
                 slot_updates.append(update)
 
         checkpoint_after = self._recalculate_checkpoint(interaction_ir, domain_package)
@@ -80,10 +118,11 @@ class SlotsUpdater:
         blueprint: Dict[str, Any],
         candidate: Dict[str, Any],
         turn_id: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
+        updates: List[Dict[str, Any]] = []
         update_rule = blueprint.get("update_rule", {}) if isinstance(blueprint.get("update_rule", {}), dict) else {}
         if slot.get("frozen") and not update_rule.get("allow_direct_overwrite_when_frozen", False):
-            return None
+            return updates
 
         new_value = candidate.get("value")
         new_confidence = float(candidate.get("confidence", 0.0) or 0.0)
@@ -95,37 +134,66 @@ class SlotsUpdater:
             slot["value"] = new_value
             slot["status"] = "filled" if not self._is_empty_value(new_value) else "unfilled"
             operation = "fill"
+            slot["candidates"] = []
         elif old_value == new_value:
             pass
         else:
             if update_rule.get("must_mark_conflict", True):
                 slot["status"] = "conflict"
                 operation = "mark_conflict"
+                candidate_added = self._add_candidate(slot, new_value, new_confidence, turn_id)
+                if old_status != "conflict":
+                    updates.append({
+                        "slot_id": slot.get("slot_id"),
+                        "operation": operation,
+                        "old_value": old_value,
+                        "new_value": old_value,
+                    })
+                if candidate_added:
+                    updates.append({
+                        "slot_id": slot.get("slot_id"),
+                        "operation": "add_candidate",
+                        "old_value": None,
+                        "new_value": candidate_added,
+                    })
+                operation = "noop"
             else:
                 slot["value"] = new_value
                 slot["status"] = "filled"
                 operation = "update"
+                slot["candidates"] = []
 
         slot["confidence"] = max(0.0, min(1.0, new_confidence))
         source_turn_ids = slot.setdefault("source_turn_ids", [])
         if turn_id not in source_turn_ids:
             source_turn_ids.append(turn_id)
 
-        if operation == "mark_conflict":
-            return {
-                "slot_id": slot.get("slot_id"),
-                "operation": operation,
-                "old_value": old_value,
-                "new_value": old_value,
-            }
-        if old_value != slot.get("value") or old_status != slot.get("status"):
-            return {
+        if operation in {"fill", "update"} and (old_value != slot.get("value") or old_status != slot.get("status")):
+            updates.append({
                 "slot_id": slot.get("slot_id"),
                 "operation": operation,
                 "old_value": old_value,
                 "new_value": slot.get("value"),
-            }
-        return None
+            })
+        return updates
+
+    def _add_candidate(self, slot: Dict[str, Any], value: Any, confidence: float, turn_id: str) -> Optional[Dict[str, Any]]:
+        if value is None or value == "" or value == [] or value == {}:
+            return None
+        candidates = slot.setdefault("candidates", [])
+        if not isinstance(candidates, list):
+            candidates = []
+            slot["candidates"] = candidates
+        for item in candidates:
+            if isinstance(item, dict) and item.get("value") == value:
+                return None
+        candidate = {
+            "value": value,
+            "turn_id": str(turn_id),
+            "confidence": max(0.0, min(1.0, float(confidence))),
+        }
+        candidates.append(candidate)
+        return candidate
 
     def _recalculate_checkpoint(self, interaction_ir: Dict[str, Any], domain_package: Dict[str, Any]) -> str:
         checkpoints = [cp for cp in domain_package.get("checkpoint_catalog", []) if isinstance(cp, dict)]

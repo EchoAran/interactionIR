@@ -171,6 +171,7 @@ class Renderer:
         title = str(slot.get("title") or slot.get("slot_key") or slot.get("slot_id"))
         status = str(slot.get("status") or "unknown")
         value = slot.get("value")
+        candidates = slot.get("candidates", [])
         renderer = blueprint.get("renderer", {}) if isinstance(blueprint.get("renderer", {}), dict) else {}
         missing_hint = self._first_text(renderer.get("missing_hint"), blueprint.get("description"))
         value_hint = self._first_text(renderer.get("value_hint"))
@@ -179,6 +180,19 @@ class Renderer:
             line += f" 当前已有内容：{self._stringify_value(value)}。"
             if value_hint:
                 line += f" {value_hint}"
+            if status == "conflict" and isinstance(candidates, list) and candidates:
+                shown: List[str] = []
+                for item in candidates:
+                    if not isinstance(item, dict):
+                        continue
+                    raw = item.get("value")
+                    text = self._stringify_value(raw)
+                    if text and text not in shown:
+                        shown.append(text)
+                    if len(shown) >= 3:
+                        break
+                if shown:
+                    line += f" 候选值：{'; '.join(shown)}"
         elif missing_hint:
             line += f" 需要补充：{missing_hint}"
         return line
