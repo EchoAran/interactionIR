@@ -35,7 +35,7 @@ class SlotsUpdater:
                 })
 
             update_rule = blueprints_by_key[slot_key].get("update_rule", {}) if isinstance(blueprints_by_key[slot_key].get("update_rule", {}), dict) else {}
-            if slot.get("frozen") and not update_rule.get("allow_direct_overwrite_when_frozen", False):
+            if str(slot.get("status") or "") == "frozen" and not update_rule.get("allow_direct_overwrite_when_frozen", False):
                 continue
 
             old_value = slot.get("value")
@@ -109,7 +109,7 @@ class SlotsUpdater:
             "value": self._empty_value(value_type),
             "confidence": 0.0,
             "source_turn_ids": [],
-            "frozen": False,
+            "candidates": [],
         }
 
     def _apply_candidate(
@@ -121,7 +121,7 @@ class SlotsUpdater:
     ) -> List[Dict[str, Any]]:
         updates: List[Dict[str, Any]] = []
         update_rule = blueprint.get("update_rule", {}) if isinstance(blueprint.get("update_rule", {}), dict) else {}
-        if slot.get("frozen") and not update_rule.get("allow_direct_overwrite_when_frozen", False):
+        if str(slot.get("status") or "") == "frozen" and not update_rule.get("allow_direct_overwrite_when_frozen", False):
             return updates
 
         new_value = candidate.get("value")
@@ -219,7 +219,6 @@ class SlotsUpdater:
             if not isinstance(slot, dict):
                 continue
             if str(slot.get("slot_key") or "") in freeze_keys:
-                slot["frozen"] = True
                 if str(slot.get("status") or "") == "filled":
                     slot["status"] = "frozen"
 

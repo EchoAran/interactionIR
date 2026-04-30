@@ -19,7 +19,7 @@
       "source_turn_ids": [
         "turn_1"
       ],
-      "frozen": true
+      "candidates": []
     },
     {
       "slot_id": "slot_success_criteria_0ac32ce5",
@@ -33,7 +33,7 @@
         "turn_2",
         "turn_3"
       ],
-      "frozen": false
+      "candidates": []
     },
     {
       "slot_id": "slot_roles_ad82470d",
@@ -47,7 +47,7 @@
         "turn_2",
         "turn_3"
       ],
-      "frozen": false
+      "candidates": []
     },
     {
       "slot_id": "slot_user_scenario_8006a021",
@@ -60,7 +60,7 @@
       "source_turn_ids": [
         "turn_2"
       ],
-      "frozen": true
+      "candidates": []
     },
     {
       "slot_id": "slot_main_flow_dde7e590",
@@ -71,7 +71,7 @@
       "value": [],
       "confidence": 0.0,
       "source_turn_ids": [],
-      "frozen": false
+      "candidates": []
     },
     {
       "slot_id": "slot_rules_constraints_00e1aa2c",
@@ -85,7 +85,7 @@
         "turn_2",
         "turn_3"
       ],
-      "frozen": false
+      "candidates": []
     },
     {
       "slot_id": "slot_boundary_assumption_25158614",
@@ -99,7 +99,7 @@
         "turn_2",
         "turn_3"
       ],
-      "frozen": false
+      "candidates": []
     }
   ],
   "current_checkpoint": "scope_baselined",

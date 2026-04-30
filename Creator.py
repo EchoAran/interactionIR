@@ -216,7 +216,6 @@ class Creator:
             "value": self._empty_value(value_type),
             "confidence": 0.0,
             "source_turn_ids": [],
-            "frozen": False,
         }
 
     def _empty_value(self, value_type: str) -> Any:

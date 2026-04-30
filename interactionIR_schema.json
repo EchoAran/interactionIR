@@ -109,10 +109,6 @@
             "type": "string"
           }
         },
-        "frozen": {
-          "type": "boolean",
-          "default": false
-        },
         "note": {
           "type": "string"
         },

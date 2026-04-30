@@ -19,7 +19,6 @@ class ParserChecker:
                 "title": s.get("title"),
                 "status": s.get("status"),
                 "value": s.get("value"),
-                "frozen": s.get("frozen", False),
                 "candidates": s.get("candidates", []),
             }
             for s in slots
