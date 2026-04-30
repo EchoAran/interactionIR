@@ -46,8 +46,11 @@ class Renderer:
         current_checkpoint = str(interaction_ir.get("current_checkpoint") or "")
         checkpoint_spec = checkpoint_by_id.get(current_checkpoint, {})
         selected_policy_ids = self._normalize_scalar_list(policy_result.get("selected_policy_ids", []))
-        selected_act_type = str(act_result.get("selected_act_type") or "")
-        selected_act_spec = act_by_type.get(selected_act_type, {})
+        selected_act_types = self._normalize_scalar_list(act_result.get("selected_act_types", []))
+        if not selected_act_types:
+            selected_act_type = str(act_result.get("selected_act_type") or "").strip()
+            if selected_act_type:
+                selected_act_types = [selected_act_type]
         focus_slot_ids = self._normalize_scalar_list(act_result.get("focus_slot_ids", []))
         focus_slots = [slot_by_id[sid] for sid in focus_slot_ids if sid in slot_by_id]
         completion_state = str(policy_result.get("completion_state") or "not_ready")
@@ -78,23 +81,38 @@ class Renderer:
         summary = self._state_summary(slots)
         lines.append(summary)
 
-        act_instruction = self._first_text(
-            selected_act_spec.get("renderer", {}).get("instruction") if isinstance(selected_act_spec.get("renderer", {}), dict) else None,
-            selected_act_spec.get("description"),
-        )
+        act_instructions: List[str] = []
+        output_hints: List[str] = []
+        for act_type in selected_act_types:
+            spec = act_by_type.get(str(act_type), {})
+            instruction = self._first_text(
+                spec.get("renderer", {}).get("instruction") if isinstance(spec.get("renderer", {}), dict) else None,
+                spec.get("description"),
+            )
+            if instruction and instruction not in act_instructions:
+                act_instructions.append(instruction)
+            hint = self._first_text(
+                spec.get("renderer", {}).get("output_hint") if isinstance(spec.get("renderer", {}), dict) else None,
+            )
+            if hint and hint not in output_hints:
+                output_hints.append(hint)
 
         if is_completion:
             completion_instruction = self._first_text(
                 checkpoint_renderer.get("completion_instruction"),
                 checkpoint_renderer.get("wrap_up_instruction"),
-                act_instruction,
+                act_instructions[0] if act_instructions else None,
             )
             if completion_instruction:
                 lines.append(f"本轮核心任务：{completion_instruction}")
             else:
                 lines.append("本轮核心任务：请对当前访谈做收束，总结已确认信息，并向用户确认是否还需补充或修正。")
-        elif act_instruction:
-            lines.append(f"本轮核心任务：{act_instruction}")
+        elif act_instructions:
+            if len(act_instructions) == 1:
+                lines.append(f"本轮核心任务：{act_instructions[0]}")
+            else:
+                lines.append("本轮核心任务：")
+                lines.extend([f"- {instruction}" for instruction in act_instructions])
 
         if focus_slots:
             lines.append("请优先处理以下焦点信息：")
@@ -106,11 +124,12 @@ class Renderer:
             lines.append("执行约束：")
             lines.extend([f"- {line}" for line in policy_lines])
 
-        output_hint = self._first_text(
-            selected_act_spec.get("renderer", {}).get("output_hint") if isinstance(selected_act_spec.get("renderer", {}), dict) else None,
-        )
-        if output_hint:
-            lines.append(f"输出要求：{output_hint}")
+        if output_hints:
+            if len(output_hints) == 1:
+                lines.append(f"输出要求：{output_hints[0]}")
+            else:
+                lines.append("输出要求：")
+                lines.extend([f"- {hint}" for hint in output_hints])
         else:
             lines.append("输出要求：直接面向用户开展下一轮交流，不要暴露内部状态名、策略名或动作名。")
 

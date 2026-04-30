@@ -127,8 +127,11 @@
         "parsed_intentions",
         "slot_updates",
         "selected_policy_ids",
-        "selected_act_type",
         "timestamp"
+      ],
+      "anyOf": [
+        {"required": ["selected_act_types"]},
+        {"required": ["selected_act_type"]}
       ],
       "properties": {
         "turn_id": {
@@ -150,6 +153,12 @@
           }
         },
         "selected_policy_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selected_act_types": {
           "type": "array",
           "items": {
             "type": "string"

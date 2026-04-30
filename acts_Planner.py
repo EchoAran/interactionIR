@@ -32,16 +32,8 @@ class ActsPlanner:
             "completion_state": completion_state,
         }
 
-        preferred_act_types: List[str] = []
-        for checkpoint in domain_package.get("checkpoint_catalog", []):
-            if isinstance(checkpoint, dict) and str(checkpoint.get("checkpoint_id") or "") == current_checkpoint:
-                preferred_act_types = self._normalize_id_list(checkpoint.get("preferred_act_types", []), "act_type")
-                break
-
         act_catalog = [a for a in domain_package.get("act_catalog", []) if isinstance(a, dict) and self._extract_id(a, "act_type")]
         by_type = {self._extract_id(a, "act_type"): a for a in act_catalog}
-
-        matched_types_in_order: List[str] = []
 
         def matches(act: Dict[str, Any]) -> bool:
             planner = act.get("planner", {}) if isinstance(act.get("planner", {}), dict) else {}
@@ -49,31 +41,71 @@ class ActsPlanner:
             conditions = when.get("conditions", [])
             return evaluator.evaluate_all(conditions, ctx)
 
-        for act_type in preferred_act_types:
+        def select_by_pipeline() -> List[str]:
+            pipeline = domain_package.get("turn_pipeline", [])
+            if not isinstance(pipeline, list) or not pipeline:
+                return []
+            selected: List[str] = []
+            for stage in pipeline:
+                if not isinstance(stage, dict):
+                    continue
+                act_types = stage.get("act_types", [])
+                if not isinstance(act_types, list):
+                    continue
+                limit = stage.get("limit", 1)
+                try:
+                    limit_int = int(limit)
+                except Exception:
+                    limit_int = 1
+                if limit_int <= 0:
+                    continue
+                stage_selected = 0
+                for raw_type in act_types:
+                    act_type = str(raw_type or "").strip()
+                    if not act_type or act_type in selected:
+                        continue
+                    act = by_type.get(act_type)
+                    if not act:
+                        continue
+                    if matches(act):
+                        selected.append(act_type)
+                        stage_selected += 1
+                        if stage_selected >= limit_int:
+                            break
+            return selected
+
+        selected_act_types = select_by_pipeline()
+        if not selected_act_types:
+            for act in act_catalog:
+                act_type = self._extract_id(act, "act_type")
+                if not act_type:
+                    continue
+                if matches(act):
+                    selected_act_types.append(act_type)
+                    break
+
+        if not selected_act_types:
+            return {"selected_act_types": [], "focus_slot_ids": [], "candidate_act_types": [], "is_completion": False}
+
+        aggregated_focus: List[str] = []
+        for act_type in selected_act_types:
             act = by_type.get(act_type)
             if not act:
                 continue
-            if matches(act):
-                matched_types_in_order.append(act_type)
+            focus_ids = self._resolve_focus_ids(act.get("planner", {}), status_groups)
+            for sid in focus_ids:
+                if sid not in aggregated_focus:
+                    aggregated_focus.append(sid)
 
-        for act in act_catalog:
-            act_type = self._extract_id(act, "act_type")
-            if act_type in matched_types_in_order:
-                continue
-            if matches(act):
-                matched_types_in_order.append(act_type)
+        is_completion = completion_state == "ready" and any(
+            bool(by_type.get(act_type, {}).get("completion_act", False)) for act_type in selected_act_types
+        )
 
-        if not matched_types_in_order:
-            return {"selected_act_type": None, "focus_slot_ids": [], "candidate_act_types": [], "is_completion": False}
-
-        best_act_type = matched_types_in_order[0]
-        best_act = by_type[best_act_type]
-        best_focus_ids = self._resolve_focus_ids(best_act.get("planner", {}), status_groups)
         return {
-            "selected_act_type": best_act_type,
-            "focus_slot_ids": best_focus_ids,
-            "candidate_act_types": matched_types_in_order,
-            "is_completion": bool(best_act.get("completion_act", False)) and completion_state == "ready",
+            "selected_act_types": selected_act_types,
+            "focus_slot_ids": aggregated_focus,
+            "candidate_act_types": selected_act_types,
+            "is_completion": is_completion,
         }
 
     def _resolve_focus_ids(self, planner: Dict[str, Any], status_groups: Dict[str, List[str]]) -> List[str]:
@@ -86,15 +118,28 @@ class ActsPlanner:
             for status in self._normalize_scalar_list(statuses):
                 ids = status_groups.get(status, [])
                 if ids:
-                    return ids[:limit]
+                    return self._dedupe_limit(ids, limit)
             return []
         if source in status_groups:
-            return status_groups.get(source, [])[:limit]
+            return self._dedupe_limit(status_groups.get(source, []), limit)
         if source == "all_open":
-            return (status_groups.get("conflict", []) + status_groups.get("ambiguous", []) + status_groups.get("unfilled", []))[:limit]
+            merged = status_groups.get("conflict", []) + status_groups.get("ambiguous", []) + status_groups.get("unfilled", [])
+            return self._dedupe_limit(merged, limit)
         if source == "all_slots":
-            return status_groups.get("all", [])[:limit]
+            return self._dedupe_limit(status_groups.get("all", []), limit)
         return []
+
+    def _dedupe_limit(self, values: List[str], limit: int) -> List[str]:
+        if limit <= 0:
+            return []
+        out: List[str] = []
+        for item in values:
+            if item in out:
+                continue
+            out.append(item)
+            if len(out) >= limit:
+                break
+        return out
 
     def _build_status_groups(self, interaction_ir: Dict[str, Any], slot_update_result: Dict[str, Any]) -> Dict[str, List[str]]:
         groups: Dict[str, List[str]] = {

@@ -355,6 +355,23 @@
       "tags": ["completion", "wrap_up"]
     }
   ],
+  "turn_pipeline": [
+    {
+      "id": "fix",
+      "act_types": ["act_resolve_conflict", "act_clarify_information", "act_redirect_to_interview"],
+      "limit": 1
+    },
+    {
+      "id": "collect",
+      "act_types": ["act_collect_missing_information", "act_deepen_existing_information", "act_align_implicit_information"],
+      "limit": 1
+    },
+    {
+      "id": "wrap",
+      "act_types": ["act_summarize_and_confirm"],
+      "limit": 1
+    }
+  ],
   "checkpoint_catalog": [
     {
       "checkpoint_id": "context_seeded",
