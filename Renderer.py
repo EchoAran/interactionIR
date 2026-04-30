@@ -162,27 +162,14 @@ class Renderer:
             if base:
                 lines.append(base)
             constraints = policy.get("constraints", {}) if isinstance(policy.get("constraints", {}), dict) else {}
-            for _, raw in constraints.items():
+            for key, raw in constraints.items():
                 if isinstance(raw, dict):
                     text = self._first_text(raw.get("instruction"), raw.get("description"), raw.get("label"))
                     if text:
                         lines.append(text)
                     continue
                 if isinstance(raw, (str, int, float, bool)):
-                    if _ == "max_questions" and isinstance(raw, (int, float)):
-                        lines.append(f"本轮最多提出 {int(raw)} 个问题。")
-                    elif _ == "tone_constraint" and isinstance(raw, str):
-                        if raw == "gentle":
-                            lines.append("语气保持温和自然，不要让用户感到被打断或被纠正。")
-                        elif raw == "neutral":
-                            lines.append("语气保持中性、专业、简洁。")
-                    elif _ == "must_focus_on_slots" and raw is True:
-                        lines.append("问题必须紧扣当前焦点信息，不要无关扩散。")
-                    elif _ == "require_summary_before_transition" and raw is True:
-                        lines.append("若准备结束访谈或转入需求整理，应先做一次简洁总结再确认。")
-                    elif _ == "redirect_requirement" and isinstance(raw, str):
-                        if raw == "softly_return_to_interview_scope":
-                            lines.append("先承接用户刚才的话，再自然回到当前需求访谈主线。")
+                    lines.append(f"{key}: {raw}")
             notes = renderer.get("notes") if isinstance(renderer.get("notes"), list) else []
             for note in notes:
                 if isinstance(note, str) and note.strip():

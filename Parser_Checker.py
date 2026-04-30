@@ -71,7 +71,7 @@ class ParserChecker:
                     "2. Identify target_slot_keys that are directly touched by the user input.\n"
                     "3. candidate_slot_values must be conservative and directly supported by the user input. Provide it as a list of objects, e.g., [{\"slot_key\": \"...\", \"value\": \"...\", \"confidence\": 0.9}].\n"
                     f"4. route must be one of: {allowed_routes}.\n"
-                    "5. need_invoke_actuator should be false only when this turn should skip the interview actuator.\n"
+                    "5. need_invoke_actuator MUST be false only when route is skip_actuator; otherwise MUST be true.\n"
                     "6. Do not invent missing details.\n"
                     f"7. Valid slot_keys are: {allowed_slot_keys}\n"
                     f"Additional parser guidance: {parser_instruction}\n"
@@ -257,12 +257,7 @@ class ParserChecker:
         if route not in allowed_routes:
             route = allowed_routes[0] if allowed_routes else "update_slots"
 
-        need_invoke_actuator = raw.get("need_invoke_actuator", True)
-        if isinstance(need_invoke_actuator, dict):
-            extracted = self._extract_scalar(need_invoke_actuator, ["value", "name", "type"])
-            need_invoke_actuator = str(extracted).lower() in {"true", "1", "yes"}
-        else:
-            need_invoke_actuator = bool(need_invoke_actuator)
+        need_invoke_actuator = route != ROUTE_SKIP_ACTUATOR
 
         notes: List[str] = []
         raw_notes = raw.get("notes", [])

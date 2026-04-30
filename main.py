@@ -44,7 +44,7 @@ def run_turn(user_input: str, interaction_ir: Dict[str, Any], domain_package: Di
     print(f"[DEBUG] parse_result: {parse_result}")  # 调试输出
     route = str(parse_result.get("route") or "")
 
-    if not parse_result.get("need_invoke_actuator", True) or route == ROUTE_SKIP_ACTUATOR:
+    if route == ROUTE_SKIP_ACTUATOR:
         slot_update_result = {
             "slot_updates": [],
             "unfilled_slot_ids": [],
