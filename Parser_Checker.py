@@ -4,7 +4,6 @@ import json
 from typing import Any, Dict, List, Optional
 
 from llm_client import OpenAICompatibleLLMClient, build_client
-from protocol import ALLOWED_ROUTES, ROUTE_REDIRECT_TO_INTERVIEW, ROUTE_SKIP_ACTUATOR
 
 
 class ParserChecker:
@@ -24,7 +23,6 @@ class ParserChecker:
             }
             for s in slots
         ]
-        allowed_routes = list(ALLOWED_ROUTES)
         parser_instruction = self._parser_instruction(domain_package)
         allowed_intentions = self._allowed_intentions(domain_package)
         allowed_slot_keys = self._allowed_slot_keys(domain_package)
@@ -35,10 +33,9 @@ class ParserChecker:
             interaction_ir=interaction_ir,
             slot_summaries=slot_summaries,
             domain_package=domain_package,
-            allowed_routes=allowed_routes,
             parser_instruction=parser_instruction,
         )
-        result = self._normalize_result(raw, allowed_routes, allowed_intentions, allowed_slot_keys)
+        result = self._normalize_result(raw, allowed_intentions, allowed_slot_keys)
 
         if self._needs_slot_extraction_fallback(result):
             fallback = self._fallback_extract_slot_values(user_input, slot_summaries, slot_blueprints)
@@ -57,7 +54,6 @@ class ParserChecker:
         interaction_ir: Dict[str, Any],
         slot_summaries: List[Dict[str, Any]],
         domain_package: Dict[str, Any],
-        allowed_routes: List[str],
         parser_instruction: str,
     ) -> Dict[str, Any]:
         allowed_slot_keys = self._allowed_slot_keys(domain_package)
@@ -70,12 +66,10 @@ class ParserChecker:
                     "1. Identify parsed_intentions using intention_catalog whenever possible.\n"
                     "2. Identify target_slot_keys that are directly touched by the user input.\n"
                     "3. candidate_slot_values must be conservative and directly supported by the user input. Provide it as a list of objects, e.g., [{\"slot_key\": \"...\", \"value\": \"...\", \"confidence\": 0.9}].\n"
-                    f"4. route must be one of: {allowed_routes}.\n"
-                    "5. need_invoke_actuator MUST be false only when route is skip_actuator; otherwise MUST be true.\n"
-                    "6. Do not invent missing details.\n"
-                    f"7. Valid slot_keys are: {allowed_slot_keys}\n"
+                    "4. Do not invent missing details.\n"
+                    f"5. Valid slot_keys are: {allowed_slot_keys}\n"
                     f"Additional parser guidance: {parser_instruction}\n"
-                    "Output JSON keys: parsed_intentions, target_slot_keys, candidate_slot_values, need_invoke_actuator, route, notes"
+                    "Output JSON keys: parsed_intentions, target_slot_keys, candidate_slot_values, notes"
                 ),
             },
             {
@@ -194,15 +188,11 @@ class ParserChecker:
         return result
 
     def _needs_slot_extraction_fallback(self, result: Dict[str, Any]) -> bool:
-        route = str(result.get("route") or "")
-        if route in {ROUTE_SKIP_ACTUATOR, ROUTE_REDIRECT_TO_INTERVIEW}:
-            return False
         return not bool(result.get("candidate_slot_values"))
 
     def _normalize_result(
         self,
         raw: Dict[str, Any],
-        allowed_routes: List[str],
         allowed_intentions: List[str],
         allowed_slot_keys: List[str],
     ) -> Dict[str, Any]:
@@ -253,12 +243,6 @@ class ParserChecker:
                 if slot_key not in target_slot_keys:
                     target_slot_keys.append(slot_key)
 
-        route = self._extract_scalar(raw.get("route"), ["route", "id", "value", "name", "type"])
-        if route not in allowed_routes:
-            route = allowed_routes[0] if allowed_routes else "update_slots"
-
-        need_invoke_actuator = route != ROUTE_SKIP_ACTUATOR
-
         notes: List[str] = []
         raw_notes = raw.get("notes", [])
         if isinstance(raw_notes, list):
@@ -270,8 +254,6 @@ class ParserChecker:
         result["parsed_intentions"] = parsed_intentions
         result["target_slot_keys"] = target_slot_keys
         result["candidate_slot_values"] = candidate_slot_values
-        result["need_invoke_actuator"] = need_invoke_actuator
-        result["route"] = route
         result["notes"] = notes
         return result
 

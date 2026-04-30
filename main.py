@@ -12,7 +12,6 @@ from history_Writer import HistoryWriter
 from policies_Evaluator import PoliciesEvaluator
 from slots_Updater import SlotsUpdater
 from llm_client import LLMClientError,build_client
-from protocol import ROUTE_SKIP_ACTUATOR
 
 BASE_DIR = Path(__file__).resolve().parent
 DOTENV_PATH = str(BASE_DIR / ".env")
@@ -42,22 +41,6 @@ def run_turn(user_input: str, interaction_ir: Dict[str, Any], domain_package: Di
 
     parse_result = parser_checker.parse(user_input, interaction_ir, domain_package)
     print(f"[DEBUG] parse_result: {parse_result}")  # 调试输出
-    route = str(parse_result.get("route") or "")
-
-    if route == ROUTE_SKIP_ACTUATOR:
-        slot_update_result = {
-            "slot_updates": [],
-            "unfilled_slot_ids": [],
-            "ambiguous_slot_ids": [],
-            "conflict_slot_ids": [],
-            "checkpoint_before": interaction_ir.get("current_checkpoint"),
-            "checkpoint_after": interaction_ir.get("current_checkpoint"),
-        }
-        policy_result = {"selected_policy_ids": [], "policy_constraints": {}, "completion_state": "not_ready"}
-        act_result = {"selected_act_type": None, "focus_slot_ids": [], "candidate_act_types": [], "is_completion": False}
-        text = "当前输入不进入访谈执行链。"
-        history_writer.append(interaction_ir, user_input, parse_result, slot_update_result, policy_result, act_result)
-        return text
 
     slot_update_result = slots_updater.update(interaction_ir, parse_result, domain_package)
     print(f"[DEBUG] slot_update_result: {slot_update_result}")  # 调试输出

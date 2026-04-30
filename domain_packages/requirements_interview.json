@@ -203,7 +203,7 @@
       "name": "温和拉回主线",
       "description": "当用户偏离当前访谈主线时，先承接，再温和拉回。",
       "trigger": {
-        "routes": ["redirect_to_interview"]
+        "intentions": ["off_topic"]
       },
       "constraints": {
         "tone_constraint": "gentle",
@@ -339,7 +339,7 @@
       "planner": {
         "priority": 120,
         "when": {
-          "routes_any": ["redirect_to_interview"]
+          "intentions_any": ["off_topic"]
         },
         "focus": {
           "source": "none",
@@ -437,7 +437,6 @@
     {
       "intention_type": "answer_slot",
       "description": "用户正在补充、回答或说明某个需求信息槽。",
-      "route": "update_slots",
       "renderer": {
         "instruction": "用户当前在补充需求信息。"
       }
@@ -445,7 +444,6 @@
     {
       "intention_type": "revise_previous_answer",
       "description": "用户在修正之前给出的需求信息。",
-      "route": "update_slots",
       "renderer": {
         "instruction": "用户当前在修正已有信息。"
       }
@@ -453,7 +451,6 @@
     {
       "intention_type": "switch_topic",
       "description": "用户试图切换到新的需求主题或子主题。",
-      "route": "update_slots",
       "renderer": {
         "instruction": "用户当前在切换访谈焦点。"
       }
@@ -461,7 +458,6 @@
     {
       "intention_type": "off_topic",
       "description": "用户当前输入偏离了需求访谈主线。",
-      "route": "redirect_to_interview",
       "renderer": {
         "instruction": "用户当前偏离了需求访谈主线。"
       }
@@ -469,7 +465,6 @@
     {
       "intention_type": "other_request",
       "description": "用户提出了与当前访谈无关的额外请求。",
-      "route": "skip_actuator",
       "renderer": {
         "instruction": "用户当前提出了与本轮访谈主线无关的请求。"
       }

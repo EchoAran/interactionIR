@@ -13,7 +13,6 @@ class PoliciesEvaluator:
     ) -> Dict[str, Any]:
         current_checkpoint = str(interaction_ir.get("current_checkpoint") or "")
         active_intentions = [str(x) for x in parse_result.get("parsed_intentions", []) if x is not None]
-        current_route = str(parse_result.get("route") or "")
         slot_statuses = [str(slot.get("status") or "") for slot in interaction_ir.get("slots", []) if isinstance(slot, dict)]
         completion_state = self._completion_state(slot_update_result)
 
@@ -31,7 +30,7 @@ class PoliciesEvaluator:
         policy_catalog = [p for p in domain_package.get("policy_catalog", []) if isinstance(p, dict)]
         for policy in policy_catalog:
             trigger = policy.get("trigger", {}) if isinstance(policy.get("trigger", {}), dict) else {}
-            if self._trigger_matches(trigger, current_checkpoint, active_intentions, current_route, slot_statuses, completion_state):
+            if self._trigger_matches(trigger, current_checkpoint, active_intentions, slot_statuses, completion_state):
                 policy_id = self._extract_id(policy, "policy_id")
                 if policy_id and policy_id not in selected_policy_ids:
                     selected_policy_ids.append(policy_id)
@@ -65,13 +64,11 @@ class PoliciesEvaluator:
         trigger: Dict[str, Any],
         current_checkpoint: str,
         active_intentions: List[str],
-        current_route: str,
         slot_statuses: List[str],
         completion_state: str,
     ) -> bool:
         checkpoints = self._normalize_id_list(trigger.get("checkpoints", []), "checkpoint_id")
         intentions = self._normalize_id_list(trigger.get("intentions", []), "intention_type")
-        routes = [str(x) for x in trigger.get("routes", []) if x is not None]
         status_any = [str(x) for x in trigger.get("slot_status_any_of", []) if x is not None]
         completion_any = [str(x) for x in trigger.get("completion_state_any_of", []) if x is not None]
 
@@ -79,13 +76,11 @@ class PoliciesEvaluator:
             return False
         if intentions and not any(i in intentions for i in active_intentions):
             return False
-        if routes and current_route not in routes:
-            return False
         if status_any and not any(status in status_any for status in slot_statuses):
             return False
         if completion_any and completion_state not in completion_any:
             return False
-        return bool(checkpoints or intentions or routes or status_any or completion_any)
+        return bool(checkpoints or intentions or status_any or completion_any)
 
     def _normalize_id_list(self, values: Any, id_field: str) -> List[str]:
         out: List[str] = []

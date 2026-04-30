@@ -108,13 +108,6 @@
           "properties": {
             "checkpoints": {"type": "array", "items": {"type": "string"}},
             "intentions": {"type": "array", "items": {"type": "string"}},
-            "routes": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": ["update_slots", "invoke_actuator", "skip_actuator", "redirect_to_interview"]
-              }
-            },
             "slot_status_any_of": {"type": "array", "items": {"type": "string"}},
             "completion_state_any_of": {"type": "array", "items": {"type": "string"}}
           },
@@ -150,13 +143,6 @@
             "when": {
               "type": "object",
               "properties": {
-                "routes_any": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "enum": ["update_slots", "invoke_actuator", "skip_actuator", "redirect_to_interview"]
-                  }
-                },
                 "intentions_any": {"type": "array", "items": {"type": "string"}},
                 "slot_status_any": {"type": "array", "items": {"type": "string"}},
                 "checkpoints_any": {"type": "array", "items": {"type": "string"}},
@@ -224,14 +210,10 @@
     },
     "intentionSpec": {
       "type": "object",
-      "required": ["intention_type", "description", "route"],
+      "required": ["intention_type", "description"],
       "properties": {
         "intention_type": {"type": "string"},
         "description": {"type": "string"},
-        "route": {
-          "type": "string",
-          "enum": ["update_slots", "invoke_actuator", "skip_actuator", "redirect_to_interview"]
-        },
         "renderer": {
           "type": "object",
           "properties": {
