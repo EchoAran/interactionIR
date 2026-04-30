@@ -49,6 +49,7 @@ class Renderer:
         selected_act_types = self._normalize_scalar_list(act_result.get("selected_act_types", []))
         focus_slot_ids = self._normalize_scalar_list(act_result.get("focus_slot_ids", []))
         focus_slots = [slot_by_id[sid] for sid in focus_slot_ids if sid in slot_by_id]
+        focus_slot_ids_by_act = act_result.get("focus_slot_ids_by_act", {})
         completion_state = str(policy_result.get("completion_state") or "not_ready")
         is_completion = bool(act_result.get("is_completion")) or completion_state == "ready"
 
@@ -110,7 +111,23 @@ class Renderer:
                 lines.append("本轮核心任务：")
                 lines.extend([f"- {instruction}" for instruction in act_instructions])
 
-        if focus_slots:
+        if isinstance(focus_slot_ids_by_act, dict) and focus_slot_ids_by_act and selected_act_types:
+            lines.append("焦点信息（按任务分组）：")
+            for act_type in selected_act_types:
+                spec = act_by_type.get(str(act_type), {})
+                act_title = self._first_text(
+                    spec.get("renderer", {}).get("instruction") if isinstance(spec.get("renderer", {}), dict) else None,
+                    spec.get("description"),
+                    str(act_type),
+                )
+                lines.append(f"任务：{act_title}")
+                ids = focus_slot_ids_by_act.get(act_type, [])
+                if isinstance(ids, list) and ids:
+                    for sid in self._normalize_scalar_list(ids):
+                        slot = slot_by_id.get(sid)
+                        if slot:
+                            lines.append(self._focus_slot_line(slot, slot_blueprints.get(str(slot.get("slot_key") or ""), {})))
+        elif focus_slots:
             lines.append("请优先处理以下焦点信息：")
             for slot in focus_slots:
                 lines.append(self._focus_slot_line(slot, slot_blueprints.get(str(slot.get("slot_key") or ""), {})))

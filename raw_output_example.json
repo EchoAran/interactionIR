@@ -7,6 +7,12 @@
         "p_deep_drill" 
     ], 
     "selected_act_types": ["ask_for_slot"],
+    "focus_slot_ids_by_act": {
+        "ask_for_slot": [
+            "slot_success_criteria_9a65561a",
+            "slot_roles_5c8871a4"
+        ]
+    },
     "focus_slots": [ 
         { 
             "slot_id": "slot_success_criteria_9a65561a",

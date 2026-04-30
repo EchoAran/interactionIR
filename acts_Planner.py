@@ -87,12 +87,14 @@ class ActsPlanner:
         if not selected_act_types:
             return {"selected_act_types": [], "focus_slot_ids": [], "candidate_act_types": [], "is_completion": False}
 
+        focus_by_act: Dict[str, List[str]] = {}
         aggregated_focus: List[str] = []
         for act_type in selected_act_types:
             act = by_type.get(act_type)
             if not act:
                 continue
             focus_ids = self._resolve_focus_ids(act.get("planner", {}), status_groups)
+            focus_by_act[act_type] = focus_ids
             for sid in focus_ids:
                 if sid not in aggregated_focus:
                     aggregated_focus.append(sid)
@@ -104,6 +106,7 @@ class ActsPlanner:
         return {
             "selected_act_types": selected_act_types,
             "focus_slot_ids": aggregated_focus,
+            "focus_slot_ids_by_act": focus_by_act,
             "candidate_act_types": selected_act_types,
             "is_completion": is_completion,
         }
