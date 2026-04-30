@@ -125,7 +125,7 @@
       "selected_policy_ids": [
         "policy_deep_drill"
       ],
-      "selected_act_type": "act_collect_missing_information",
+      "selected_act_types": ["act_collect_missing_information"],
       "checkpoint_before": "context_seeded",
       "checkpoint_after": "core_problem_aligned",
       "timestamp": "2026-04-22T00:17:32+00:00"
@@ -243,7 +243,7 @@
       "selected_policy_ids": [
         "policy_deep_drill"
       ],
-      "selected_act_type": "act_resolve_conflict",
+      "selected_act_types": ["act_resolve_conflict"],
       "checkpoint_before": "core_problem_aligned",
       "checkpoint_after": "scope_baselined",
       "timestamp": "2026-04-22T00:19:49+00:00"
@@ -284,7 +284,7 @@
       "selected_policy_ids": [
         "policy_deep_drill"
       ],
-      "selected_act_type": "act_resolve_conflict",
+      "selected_act_types": ["act_resolve_conflict"],
       "checkpoint_before": "scope_baselined",
       "checkpoint_after": "scope_baselined",
       "timestamp": "2026-04-22T00:23:05+00:00"

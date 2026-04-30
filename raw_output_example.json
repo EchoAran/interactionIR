@@ -6,13 +6,7 @@
     "selected_policy_ids": [ 
         "p_deep_drill" 
     ], 
-    "policy_constraints": { 
-        "question_style": "deep_drill_down", 
-        "max_questions": 2, 
-        "tone_constraint": "neutral", 
-        "must_focus_on_slots": true 
-    }, 
-    "selected_act_type": "ask_for_slot",
+    "selected_act_types": ["ask_for_slot"],
     "focus_slots": [ 
         { 
             "slot_id": "slot_success_criteria_9a65561a",

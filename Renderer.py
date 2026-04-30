@@ -47,10 +47,6 @@ class Renderer:
         checkpoint_spec = checkpoint_by_id.get(current_checkpoint, {})
         selected_policy_ids = self._normalize_scalar_list(policy_result.get("selected_policy_ids", []))
         selected_act_types = self._normalize_scalar_list(act_result.get("selected_act_types", []))
-        if not selected_act_types:
-            selected_act_type = str(act_result.get("selected_act_type") or "").strip()
-            if selected_act_type:
-                selected_act_types = [selected_act_type]
         focus_slot_ids = self._normalize_scalar_list(act_result.get("focus_slot_ids", []))
         focus_slots = [slot_by_id[sid] for sid in focus_slot_ids if sid in slot_by_id]
         completion_state = str(policy_result.get("completion_state") or "not_ready")
