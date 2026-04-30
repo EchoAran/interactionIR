@@ -25,7 +25,7 @@ class SlotsUpdater:
 
             slot = slots_by_key.get(slot_key)
             if slot is None:
-                slot = self._create_slot_from_blueprint(blueprints_by_key[slot_key])
+                slot = self._create_slot_from_blueprint(blueprints_by_key[slot_key], domain_package)
                 slots.append(slot)
                 slots_by_key[slot_key] = slot
                 slot_updates.append({
@@ -53,11 +53,14 @@ class SlotsUpdater:
             "checkpoint_after": checkpoint_after,
         }
 
-    def _create_slot_from_blueprint(self, blueprint: Dict[str, Any]) -> Dict[str, Any]:
+    def _create_slot_from_blueprint(self, blueprint: Dict[str, Any], domain_package: Dict[str, Any]) -> Dict[str, Any]:
         slot_key = str(blueprint.get("slot_key"))
         title = str(blueprint.get("title") or slot_key)
         value_type = str(blueprint.get("value_type") or "text")
-        status_enum = [str(x) for x in blueprint.get("status_enum", []) if x]
+        raw_status_enum = blueprint.get("status_enum", None)
+        if raw_status_enum is None:
+            raw_status_enum = domain_package.get("slot_status_enum", [])
+        status_enum = [str(x) for x in raw_status_enum if x] if isinstance(raw_status_enum, list) else []
         initial_status = "unfilled" if "unfilled" in status_enum else (status_enum[0] if status_enum else "unfilled")
         return {
             "slot_id": f"slot_{slot_key}_{uuid.uuid4().hex[:8]}",

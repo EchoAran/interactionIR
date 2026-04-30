@@ -180,7 +180,7 @@ class Creator:
             "status": "active",
         }
         slots = [
-            self._make_slot_instance(bp)
+            self._make_slot_instance(bp, selected_pkg.data)
             for bp in selected_pkg.data.get("slot_blueprint_catalog", [])
             if isinstance(bp, dict) and bool(bp.get("creation_rule", {}).get("create_at_init", True))
         ]
@@ -198,11 +198,14 @@ class Creator:
             "history": [],
         }
 
-    def _make_slot_instance(self, blueprint: Dict[str, Any]) -> Dict[str, Any]:
+    def _make_slot_instance(self, blueprint: Dict[str, Any], domain_package: Dict[str, Any]) -> Dict[str, Any]:
         slot_key = str(blueprint.get("slot_key"))
         title = str(blueprint.get("title") or slot_key)
         value_type = str(blueprint.get("value_type") or "text")
-        status_enum = [str(x) for x in blueprint.get("status_enum", []) if x]
+        raw_status_enum = blueprint.get("status_enum", None)
+        if raw_status_enum is None:
+            raw_status_enum = domain_package.get("slot_status_enum", [])
+        status_enum = [str(x) for x in raw_status_enum if x] if isinstance(raw_status_enum, list) else []
         initial_status = "unfilled" if "unfilled" in status_enum else (status_enum[0] if status_enum else "unfilled")
         return {
             "slot_id": f"slot_{slot_key}_{uuid.uuid4().hex[:8]}",

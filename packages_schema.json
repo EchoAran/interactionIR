@@ -16,13 +16,13 @@
     "domain_id": {"type": "string"},
     "version": {"type": "string"},
     "description": {"type": "string"},
+    "slot_status_enum": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
     "parser_guidance": {
       "type": "object",
       "properties": {
-        "allowed_routes": {
-          "type": "array",
-          "items": {"type": "string"}
-        },
         "instruction": {"type": "string"}
       },
       "additionalProperties": true
@@ -56,7 +56,6 @@
         "slot_key",
         "title",
         "value_type",
-        "status_enum",
         "creation_rule",
         "update_rule"
       ],
@@ -70,13 +69,10 @@
           "enum": ["string", "text", "number", "boolean", "enum", "array", "object"]
         },
         "status_enum": {"type": "array", "items": {"type": "string"}},
-        "allow_multiple_values": {"type": "boolean", "default": false},
         "creation_rule": {
           "type": "object",
           "properties": {
-            "create_at_init": {"type": "boolean", "default": true},
-            "create_on_intentions": {"type": "array", "items": {"type": "string"}},
-            "create_on_checkpoint": {"type": "array", "items": {"type": "string"}}
+            "create_at_init": {"type": "boolean", "default": true}
           },
           "additionalProperties": false
         },
@@ -84,16 +80,7 @@
           "type": "object",
           "properties": {
             "allow_direct_overwrite_when_frozen": {"type": "boolean", "default": false},
-            "must_mark_conflict": {"type": "boolean", "default": true},
-            "require_source_trace": {"type": "boolean", "default": true},
-            "require_confidence": {"type": "boolean", "default": true}
-          },
-          "additionalProperties": false
-        },
-        "freeze_rule": {
-          "type": "object",
-          "properties": {
-            "freeze_at_checkpoints": {"type": "array", "items": {"type": "string"}}
+            "must_mark_conflict": {"type": "boolean", "default": true}
           },
           "additionalProperties": false
         },
@@ -116,13 +103,18 @@
         "policy_id": {"type": "string"},
         "name": {"type": "string"},
         "description": {"type": "string"},
-        "applies_to_act_types": {"type": "array", "items": {"type": "string"}},
         "trigger": {
           "type": "object",
           "properties": {
             "checkpoints": {"type": "array", "items": {"type": "string"}},
             "intentions": {"type": "array", "items": {"type": "string"}},
-            "routes": {"type": "array", "items": {"type": "string"}},
+            "routes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["update_slots", "invoke_actuator", "skip_actuator", "redirect_to_interview"]
+              }
+            },
             "slot_status_any_of": {"type": "array", "items": {"type": "string"}},
             "completion_state_any_of": {"type": "array", "items": {"type": "string"}}
           },
@@ -131,19 +123,7 @@
         "constraints": {
           "type": "object",
           "additionalProperties": {
-            "oneOf": [
-              {"type": ["string", "number", "boolean"]},
-              {
-                "type": "object",
-                "properties": {
-                  "value": {},
-                  "instruction": {"type": "string"},
-                  "label": {"type": "string"},
-                  "description": {"type": "string"}
-                },
-                "additionalProperties": true
-              }
-            ]
+            "type": ["string", "number", "boolean"]
           }
         },
         "renderer": {
@@ -170,7 +150,13 @@
             "when": {
               "type": "object",
               "properties": {
-                "routes_any": {"type": "array", "items": {"type": "string"}},
+                "routes_any": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["update_slots", "invoke_actuator", "skip_actuator", "redirect_to_interview"]
+                  }
+                },
                 "intentions_any": {"type": "array", "items": {"type": "string"}},
                 "slot_status_any": {"type": "array", "items": {"type": "string"}},
                 "checkpoints_any": {"type": "array", "items": {"type": "string"}},
@@ -242,7 +228,10 @@
       "properties": {
         "intention_type": {"type": "string"},
         "description": {"type": "string"},
-        "route": {"type": "string"},
+        "route": {
+          "type": "string",
+          "enum": ["update_slots", "invoke_actuator", "skip_actuator", "redirect_to_interview"]
+        },
         "renderer": {
           "type": "object",
           "properties": {
