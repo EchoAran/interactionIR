@@ -45,22 +45,8 @@ class PoliciesEvaluator:
                 if policy_id and policy_id not in selected_policy_ids:
                     selected_policy_ids.append(policy_id)
 
-        policy_constraints: Dict[str, Any] = {}
-        by_id = {
-            self._extract_id(p, "policy_id"): p
-            for p in policy_catalog
-            if self._extract_id(p, "policy_id")
-        }
-        for policy_id in selected_policy_ids:
-            policy = by_id.get(str(policy_id))
-            if not policy:
-                continue
-            constraints = policy.get("constraints", {}) if isinstance(policy.get("constraints", {}), dict) else {}
-            policy_constraints.update(constraints)
-
         return {
             "selected_policy_ids": selected_policy_ids,
-            "policy_constraints": policy_constraints,
             "completion_state": completion_state,
         }
 
