@@ -112,6 +112,7 @@
           "properties": {
             "conditions": {
               "type": "array",
+              "description": "Condition expressions evaluated against runtime ctx. Available names: checkpoint, intentions, slot_statuses, completion_state. completion_state is computed by PoliciesEvaluator: 'ready' if no unfilled/ambiguous/conflict slots, else 'not_ready'.",
               "items": {"type": "string"}
             }
           },
@@ -141,6 +142,7 @@
               "properties": {
                 "conditions": {
                   "type": "array",
+                  "description": "Condition expressions evaluated against runtime ctx. Available names: checkpoint, intentions, slot_statuses, completion_state. completion_state comes from policy_result.completion_state.",
                   "items": {"type": "string"}
                 }
               },

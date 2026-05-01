@@ -41,6 +41,11 @@
   - 目前可用通用函数：has_intention(x), slot_status_any_of([...]), slot_status_all_in([...])
 - renderer.instruction：对外部执行代理的策略约束文案（建议写“必须遵守”的要求）。
 
+completion_state 定义：
+- not_ready：本轮 slot_update_result 中存在 unfilled_slot_ids / ambiguous_slot_ids / conflict_slot_ids 任意一种非空
+- ready：上述三类均为空
+- 计算位置：PoliciesEvaluator._completion_state（policies_Evaluator.py）
+
 注意：policy.renderer.notes 已移除；如需补充建议，直接写进 instruction。
 
 ## act_catalog（动作）
@@ -89,4 +94,3 @@ checkpoint 用于：
   其中 <slot_key> 必须来自 slot_blueprint_catalog.slot_key。
 - freeze_slot_keys：达到该 checkpoint 后需要冻结的 slot_key 列表（状态会从 filled 转 frozen）。
 - preferred_policy_ids / preferred_act_types：在同等触发条件下的偏好顺序（仅偏好，不做业务特判）。
-

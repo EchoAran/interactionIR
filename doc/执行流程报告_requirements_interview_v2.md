@@ -122,6 +122,11 @@ flowchart TD
 策略条件上下文（ctx）包含：
 - checkpoint / intentions / slot_statuses / completion_state
 
+completion_state 定义：
+- not_ready：SlotsUpdater.update 输出的 unfilled_slot_ids / ambiguous_slot_ids / conflict_slot_ids 任意一种非空
+- ready：上述三类均为空
+- 计算位置：PoliciesEvaluator._completion_state（policies_Evaluator.py）
+
 ### 2.7 act_catalog（动作）
 对应 JSON 字段：
 - act_catalog[].planner.when.conditions
@@ -238,4 +243,3 @@ ctx.slot_statuses 包含 conflict/unfilled，因此：
 - checkpoint.entry_conditions 目前使用另一套窄 DSL，只支持 <slot_key>.status 的比较与 in 判断。
 - 冻结状态只通过 slot.status=="frozen" 表达，不存在额外布尔位。
 - 冲突不会覆盖 slot.value；冲突候选保存在 slot.candidates，需用户确认后通过 resolved_slot_values 落盘。
-
