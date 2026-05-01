@@ -1,0 +1,316 @@
+{
+  "domain_id": "study_plan",
+  "version": "v1",
+  "description": "用于学习计划制定与迭代的领域包。目标是明确学习目标与动机、当前水平、时间资源与限制、学习路径与资源、里程碑与评估方式，并最终产出可执行的周计划。",
+  "slot_status_enum": ["unfilled", "partial", "filled", "ambiguous", "conflict", "frozen"],
+  "parser_guidance": {
+    "instruction": "优先判断用户是在描述学习目标、背景水平、时间安排、资源偏好，还是在修正已有计划、反馈执行情况。候选值必须来自原文，不要臆造课程、时长或进度。"
+  },
+  "slot_blueprint_catalog": [
+    {
+      "blueprint_id": "bp_goal",
+      "slot_key": "goal",
+      "title": "学习目标",
+      "description": "希望达到的能力或结果（例如通过考试、掌握技能、完成项目）。",
+      "value_type": "text",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "学习目标",
+        "value_hint": "可追问目标的衡量标准、截止时间与优先级。",
+        "missing_hint": "需要明确学习目标是什么，以及希望达到什么程度。"
+      }
+    },
+    {
+      "blueprint_id": "bp_current_level",
+      "slot_key": "current_level",
+      "title": "当前水平",
+      "description": "现有基础、经验、已学内容与薄弱点。",
+      "value_type": "text",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "当前水平",
+        "value_hint": "可追问是否有相关经验、最近一次成绩/作品、主要困难点。",
+        "missing_hint": "需要说明当前基础与薄弱点，以便制定合适路径。"
+      }
+    },
+    {
+      "blueprint_id": "bp_time_budget",
+      "slot_key": "time_budget",
+      "title": "时间预算",
+      "description": "每周可投入时长、可学习时段与频率。",
+      "value_type": "text",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "时间预算",
+        "value_hint": "可追问工作日/周末分配、是否有固定空档、可坚持的最低投入。",
+        "missing_hint": "需要明确每周可投入的学习时间与可用时段。"
+      }
+    },
+    {
+      "blueprint_id": "bp_constraints",
+      "slot_key": "constraints",
+      "title": "限制条件",
+      "description": "预算、设备、语言水平、注意力、健康、截止期等限制。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "限制条件",
+        "value_hint": "可追问必须遵守的硬约束与不可用资源。",
+        "missing_hint": "需要说明有哪些限制条件（时间/预算/设备/截止期等）。"
+      }
+    },
+    {
+      "blueprint_id": "bp_preferences",
+      "slot_key": "learning_preferences",
+      "title": "学习偏好",
+      "description": "偏好的学习方式与资源类型（视频/书/项目/题库/导师）。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "学习偏好",
+        "value_hint": "可追问偏好强度与不喜欢的方式。",
+        "missing_hint": "需要说明偏好哪些学习方式或资源类型。"
+      }
+    },
+    {
+      "blueprint_id": "bp_resources",
+      "slot_key": "resources",
+      "title": "学习资源",
+      "description": "可用或计划使用的书籍/课程/题库/项目/工具。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": false},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "学习资源",
+        "value_hint": "可追问是否已有资源清单、是否需要推荐。",
+        "missing_hint": "需要明确将使用哪些学习资源（如已确定）。"
+      }
+    },
+    {
+      "blueprint_id": "bp_milestones",
+      "slot_key": "milestones",
+      "title": "里程碑",
+      "description": "阶段目标与检查点（例如第 2 周完成某章节，第 4 周完成小项目）。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "里程碑",
+        "value_hint": "可追问阶段产出、验收方式与时间点。",
+        "missing_hint": "需要设定可检查的阶段性目标与时间点。"
+      }
+    },
+    {
+      "blueprint_id": "bp_week_plan",
+      "slot_key": "weekly_plan",
+      "title": "周计划",
+      "description": "具体到每周/每天的学习安排与任务拆分。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "周计划",
+        "value_hint": "可追问每次学习的任务颗粒度与预计耗时。",
+        "missing_hint": "需要输出可执行的周计划（任务与频率）。"
+      }
+    },
+    {
+      "blueprint_id": "bp_assessment",
+      "slot_key": "assessment",
+      "title": "评估方式",
+      "description": "如何判断学习是否有效（测验、作品、考试成绩、面试题等）。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "评估方式",
+        "value_hint": "可追问是否需要阶段测试、如何记录与复盘。",
+        "missing_hint": "需要明确评估方式与复盘节奏。"
+      }
+    }
+  ],
+  "policy_catalog": [
+    {
+      "policy_id": "policy_goal_first",
+      "name": "先目标后路径",
+      "description": "先明确目标、现状与时间预算，再进入路径与计划细化。",
+      "trigger": {
+        "conditions": [
+          "checkpoint == 'goal_seeded'",
+          "slot_status_any_of(['unfilled','partial','ambiguous','conflict'])"
+        ]
+      },
+      "renderer": {
+        "instruction": "当前应先把目标、当前水平与时间预算说清楚。本轮最多 2 个问题，尽量用明确选项或可量化信息来收敛。"
+      }
+    },
+    {
+      "policy_id": "policy_plan_refine",
+      "name": "计划细化",
+      "description": "在目标与约束明确后，细化里程碑与周计划。",
+      "trigger": {
+        "conditions": [
+          "checkpoint in ['baseline_ready','plan_drafting']",
+          "slot_status_any_of(['partial','ambiguous','conflict','unfilled'])"
+        ]
+      },
+      "renderer": {
+        "instruction": "当前应把计划做实：里程碑要可检查，周计划要可执行。本轮最多 2 个问题，避免泛泛建议，尽量产出具体安排。"
+      }
+    },
+    {
+      "policy_id": "policy_wrap_up",
+      "name": "收束确认",
+      "description": "当信息齐备时输出完整计划并确认执行方式。",
+      "trigger": {"conditions": ["completion_state == 'ready'"]},
+      "renderer": {
+        "instruction": "当前信息已基本齐备，请输出学习计划总结（目标/里程碑/周计划/评估），并向用户确认是否可执行与是否需要调整。只需一个确认性问题。"
+      }
+    }
+  ],
+  "act_catalog": [
+    {
+      "act_type": "act_resolve_conflict",
+      "description": "当用户对目标、时间预算或约束出现矛盾表述时，推动用户确认最终选择。",
+      "planner": {
+        "when": {"conditions": ["completion_state == 'not_ready'", "slot_status_any_of(['conflict'])"]},
+        "focus": {"source": "conflict", "limit": 2}
+      },
+      "renderer": {
+        "instruction": "请先解决冲突信息：把候选说法列清楚，让用户明确选择哪个为准。",
+        "output_hint": "确认后再进入计划细化，避免在不确定目标上做方案。"
+      }
+    },
+    {
+      "act_type": "act_clarify_information",
+      "description": "澄清模糊目标或不清晰约束，避免误解。",
+      "planner": {
+        "when": {"conditions": ["completion_state == 'not_ready'", "slot_status_any_of(['ambiguous'])"]},
+        "focus": {"source": "ambiguous", "limit": 2}
+      },
+      "renderer": {
+        "instruction": "请围绕歧义信息发起澄清式提问，让用户把目标/约束说得更具体。",
+        "output_hint": "每次只澄清一个点，给出 2-4 个可选项能更快收敛。"
+      }
+    },
+    {
+      "act_type": "act_collect_basics",
+      "description": "补齐目标、当前水平、时间预算与限制条件等基础信息。",
+      "planner": {
+        "when": {"conditions": ["completion_state == 'not_ready'", "checkpoint == 'goal_seeded'", "slot_status_any_of(['unfilled','partial'])"]},
+        "focus": {"source": "all_open", "limit": 2}
+      },
+      "renderer": {
+        "instruction": "请优先补齐学习计划的基础信息：目标、当前水平、时间预算、限制条件。",
+        "output_hint": "问题尽量可量化（时间/截止期/优先级/可投入频率）。"
+      }
+    },
+    {
+      "act_type": "act_draft_plan",
+      "description": "在基础信息明确后，产出里程碑与周计划的草案。",
+      "planner": {
+        "when": {"conditions": ["completion_state == 'not_ready'", "checkpoint in ['baseline_ready','plan_drafting']", "slot_status_any_of(['partial','filled','frozen','unfilled'])"]},
+        "focus": {"source": "all_open", "limit": 2}
+      },
+      "renderer": {
+        "instruction": "请围绕已明确的信息，产出可执行的里程碑与周计划草案，并补齐必要的评估方式。",
+        "output_hint": "输出要具体到每周任务与检查点，不要只给原则性建议。"
+      }
+    },
+    {
+      "act_type": "act_redirect_to_plan",
+      "description": "当用户偏离学习计划制定主线时，先承接再拉回。",
+      "planner": {"when": {"conditions": ["has_intention('off_topic')"]}, "focus": {"source": "none", "limit": 0}},
+      "renderer": {
+        "instruction": "请先承接用户话题，然后把交流拉回学习计划的关键要素：目标、时间预算、限制与可执行周计划。",
+        "output_hint": "语气温和自然，只提出一个最关键的拉回问题。"
+      }
+    },
+    {
+      "act_type": "act_summarize_and_confirm",
+      "description": "总结学习计划并确认用户是否认可与可执行。",
+      "planner": {"when": {"conditions": ["completion_state == 'ready'"]}, "focus": {"source": "all_slots", "limit": 20}},
+      "renderer": {
+        "instruction": "请总结学习目标、当前水平、时间预算、限制条件、里程碑、周计划和评估方式，并询问用户是否可执行或需要调整。",
+        "output_hint": "输出应以计划总结与确认问题为主，不要再发散新话题。"
+      },
+      "completion_act": true
+    }
+  ],
+  "turn_pipeline": [
+    {"id": "fix", "act_types": ["act_resolve_conflict", "act_clarify_information", "act_redirect_to_plan"], "limit": 1},
+    {"id": "collect", "act_types": ["act_collect_basics", "act_draft_plan"], "limit": 1},
+    {"id": "wrap", "act_types": ["act_summarize_and_confirm"], "limit": 1}
+  ],
+  "checkpoint_catalog": [
+    {
+      "checkpoint_id": "goal_seeded",
+      "label": "目标已提出",
+      "entry_conditions": [],
+      "freeze_slot_keys": [],
+      "preferred_policy_ids": ["policy_goal_first"],
+      "preferred_act_types": ["act_collect_basics"],
+      "renderer": {"description": "当前先把学习目标、现状与可投入时间说明白，再进入计划制定。"}
+    },
+    {
+      "checkpoint_id": "baseline_ready",
+      "label": "基础信息已齐备",
+      "entry_conditions": [
+        "goal.status in ['filled','frozen']",
+        "current_level.status in ['filled','frozen']",
+        "time_budget.status in ['filled','frozen']"
+      ],
+      "freeze_slot_keys": ["goal", "current_level", "time_budget"],
+      "preferred_policy_ids": ["policy_plan_refine"],
+      "preferred_act_types": ["act_draft_plan", "act_resolve_conflict"],
+      "renderer": {"description": "目标、现状与时间预算已明确，应把里程碑与周计划细化落地。"}
+    },
+    {
+      "checkpoint_id": "plan_drafting",
+      "label": "计划草案生成中",
+      "entry_conditions": [
+        "goal.status in ['filled','frozen']",
+        "current_level.status in ['filled','frozen']",
+        "time_budget.status in ['filled','frozen']",
+        "milestones.status in ['filled','frozen']"
+      ],
+      "freeze_slot_keys": ["goal", "current_level", "time_budget", "milestones"],
+      "preferred_policy_ids": ["policy_plan_refine"],
+      "preferred_act_types": ["act_draft_plan", "act_clarify_information"],
+      "renderer": {"description": "已有里程碑草案，应补齐周计划、评估方式与资源选择。"}
+    },
+    {
+      "checkpoint_id": "wrap_up_ready",
+      "label": "收束准备就绪",
+      "entry_conditions": [
+        "goal.status in ['filled','frozen']",
+        "current_level.status in ['filled','frozen']",
+        "time_budget.status in ['filled','frozen']",
+        "constraints.status in ['filled','frozen']",
+        "milestones.status in ['filled','frozen']",
+        "weekly_plan.status in ['filled','frozen']",
+        "assessment.status in ['filled','frozen']"
+      ],
+      "freeze_slot_keys": ["goal", "current_level", "time_budget", "constraints", "milestones", "weekly_plan", "assessment"],
+      "preferred_policy_ids": ["policy_wrap_up"],
+      "preferred_act_types": ["act_summarize_and_confirm"],
+      "renderer": {
+        "description": "学习计划关键要素已齐备，可以输出总结并确认是否可执行。",
+        "completion_instruction": "若当前已无缺口/歧义/冲突，请优先输出学习计划总结并确认是否可执行。",
+        "wrap_up_instruction": "收束时输出目标、里程碑、周计划与评估方式，再问一个确认问题。"
+      }
+    }
+  ],
+  "intention_catalog": [
+    {"intention_type": "answer_slot", "description": "用户在补充学习计划信息。", "renderer": {"instruction": "用户正在补充学习计划信息。"}},
+    {"intention_type": "revise_previous_answer", "description": "用户在修正之前的目标/约束/计划。", "renderer": {"instruction": "用户正在修正已有计划信息。"}},
+    {"intention_type": "switch_topic", "description": "用户试图切换到新的学习目标或子方向。", "renderer": {"instruction": "用户正在切换学习计划的焦点。"}},
+    {"intention_type": "off_topic", "description": "用户偏离学习计划制定主线。", "renderer": {"instruction": "用户偏离了学习计划制定主线。"}},
+    {"intention_type": "other_request", "description": "用户提出与学习计划无关的额外请求。", "renderer": {"instruction": "用户提出了与学习计划无关的额外请求。"}}
+  ]
+}

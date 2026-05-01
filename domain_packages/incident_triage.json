@@ -1,0 +1,285 @@
+{
+  "domain_id": "incident_triage",
+  "version": "v1",
+  "description": "用于线上事故/告警处置的访谈与信息收集领域包。目标是快速明确事故现象、影响面、严重等级、已采取的缓解措施，并推动下一步处置与复盘准备。",
+  "slot_status_enum": ["unfilled", "partial", "filled", "ambiguous", "conflict", "frozen"],
+  "parser_guidance": {
+    "instruction": "优先判断用户是在报告事故现象、补充影响与时间线、确认严重等级、汇报已做的缓解操作，还是提出与事故无关的请求。候选值必须来自原文，不要补全未提及的细节。"
+  },
+  "slot_blueprint_catalog": [
+    {
+      "blueprint_id": "bp_incident_title",
+      "slot_key": "incident_title",
+      "title": "事故标题",
+      "description": "用一句话描述事故：现象 + 影响对象。",
+      "value_type": "text",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "事故标题",
+        "value_hint": "可追问触发条件、具体错误现象与用户可感知症状。",
+        "missing_hint": "需要一句话概括事故现象与影响对象。"
+      }
+    },
+    {
+      "blueprint_id": "bp_impact",
+      "slot_key": "impact",
+      "title": "影响面",
+      "description": "受影响用户/地区/业务功能、影响程度与规模。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "影响面",
+        "value_hint": "可追问影响用户数、SLA/SLO、核心链路是否受损。",
+        "missing_hint": "需要明确影响对象、规模与严重程度。"
+      }
+    },
+    {
+      "blueprint_id": "bp_severity",
+      "slot_key": "severity",
+      "title": "严重等级",
+      "description": "事故严重等级（如 SEV1/2/3 或 P0/P1/P2）。",
+      "value_type": "string",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "严重等级",
+        "value_hint": "可追问依据：影响范围、持续时间、是否有绕行方案。",
+        "missing_hint": "需要给出事故严重等级，并说明依据。"
+      }
+    },
+    {
+      "blueprint_id": "bp_services_affected",
+      "slot_key": "services_affected",
+      "title": "受影响服务/模块",
+      "description": "受影响的系统、服务、组件或外部依赖。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "受影响服务/模块",
+        "value_hint": "可追问上游/下游依赖、版本变更、近期发布。",
+        "missing_hint": "需要列出受影响的服务、模块或依赖。"
+      }
+    },
+    {
+      "blueprint_id": "bp_timeline",
+      "slot_key": "timeline",
+      "title": "时间线",
+      "description": "关键时间点：开始、发现、升级、缓解、恢复。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "时间线",
+        "value_hint": "可追问各关键时间点与证据来源（告警、日志、用户反馈）。",
+        "missing_hint": "需要给出关键时间点（开始/发现/升级/缓解/恢复）。"
+      }
+    },
+    {
+      "blueprint_id": "bp_mitigation",
+      "slot_key": "mitigation",
+      "title": "已采取的缓解措施",
+      "description": "已执行的操作、绕行方案、回滚、限流、开关等。",
+      "value_type": "text",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "已采取的缓解措施",
+        "value_hint": "可追问做了什么、由谁做、效果如何、是否可逆。",
+        "missing_hint": "需要明确当前采取了哪些缓解措施及其效果。"
+      }
+    },
+    {
+      "blueprint_id": "bp_next_steps",
+      "slot_key": "next_steps",
+      "title": "下一步处置计划",
+      "description": "接下来要做的排查/修复/沟通/复盘安排。",
+      "value_type": "array",
+      "creation_rule": {"create_at_init": true},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "下一步处置计划",
+        "value_hint": "可追问负责人、时间点、风险与回滚预案。",
+        "missing_hint": "需要明确下一步计划、负责人和时间要求。"
+      }
+    },
+    {
+      "blueprint_id": "bp_owner",
+      "slot_key": "owner",
+      "title": "当前负责人",
+      "description": "事故处置负责人或 oncall 信息。",
+      "value_type": "string",
+      "creation_rule": {"create_at_init": false},
+      "update_rule": {"allow_direct_overwrite_when_frozen": false, "must_mark_conflict": true},
+      "renderer": {
+        "title_for_agent": "当前负责人",
+        "value_hint": "可追问谁在负责协调、谁在执行操作、沟通渠道。",
+        "missing_hint": "需要明确当前处置负责人/协同方式。"
+      }
+    }
+  ],
+  "policy_catalog": [
+    {
+      "policy_id": "policy_fast_triage",
+      "name": "快速分诊",
+      "description": "优先快速明确影响面、严重等级与当前状态，确保可行动。",
+      "trigger": {
+        "conditions": [
+          "checkpoint == 'triage_started'",
+          "slot_status_any_of(['unfilled','partial','ambiguous','conflict'])"
+        ]
+      },
+      "renderer": {
+        "instruction": "当前应快速分诊：优先确认影响面、严重等级与当前是否仍在发生。本轮最多提出 2 个问题，问题要短、明确、可执行；避免展开过多假设推理。"
+      }
+    },
+    {
+      "policy_id": "policy_stabilize_first",
+      "name": "先稳定再深入",
+      "description": "当仍在发生或影响很大时，优先缓解与恢复，再讨论复盘细节。",
+      "trigger": {
+        "conditions": [
+          "checkpoint in ['impact_assessed','stabilization_in_progress']",
+          "slot_status_any_of(['conflict','ambiguous','partial','unfilled'])"
+        ]
+      },
+      "renderer": {
+        "instruction": "当前应先稳定再深入：先围绕缓解措施、恢复路径与风险控制提问。本轮最多提出 2 个问题，语气简洁，聚焦于可立即执行的下一步。"
+      }
+    },
+    {
+      "policy_id": "policy_wrap_up",
+      "name": "收束与复盘准备",
+      "description": "信息齐备后做一次清晰收束，确认下一步与复盘准备。",
+      "trigger": {"conditions": ["completion_state == 'ready'"]},
+      "renderer": {
+        "instruction": "当前信息已基本齐备，请总结事故现象、影响面、关键时间线与已采取措施，并确认下一步计划与负责人。只需一个确认性问题即可。"
+      }
+    }
+  ],
+  "act_catalog": [
+    {
+      "act_type": "act_resolve_conflict",
+      "description": "处理冲突信息，推动用户明确取舍或确认最终说法。",
+      "planner": {
+        "when": {"conditions": ["completion_state == 'not_ready'", "slot_status_any_of(['conflict'])"]},
+        "focus": {"source": "conflict", "limit": 2}
+      },
+      "renderer": {
+        "instruction": "请先解决当前冲突信息，让用户明确哪个说法为准，并必要时记录候选值供确认。",
+        "output_hint": "先让用户做明确选择，再进入下一步补齐或推进。"
+      }
+    },
+    {
+      "act_type": "act_clarify_information",
+      "description": "澄清歧义或不完整表达，提升可执行性。",
+      "planner": {
+        "when": {"conditions": ["completion_state == 'not_ready'", "slot_status_any_of(['ambiguous'])"]},
+        "focus": {"source": "ambiguous", "limit": 2}
+      },
+      "renderer": {
+        "instruction": "请围绕歧义信息做澄清提问，尽量把问题缩小到可回答的是/否或一个具体选项。",
+        "output_hint": "避免一次问太多；把复杂问题拆成最关键的一问。"
+      }
+    },
+    {
+      "act_type": "act_collect_missing_information",
+      "description": "补齐影响面、严重等级、受影响服务、时间线、缓解措施等关键缺失信息。",
+      "planner": {
+        "when": {"conditions": ["completion_state == 'not_ready'", "slot_status_any_of(['unfilled','partial'])"]},
+        "focus": {"source": "all_open", "limit": 2}
+      },
+      "renderer": {
+        "instruction": "请优先补齐事故分诊所需的关键缺失信息（影响面、严重等级、当前状态、缓解措施）。",
+        "output_hint": "问题尽量可量化（范围/人数/时间点/服务名/是否恢复）。"
+      }
+    },
+    {
+      "act_type": "act_redirect_to_triage",
+      "description": "当用户偏离事故处置主线时，先承接再拉回分诊要点。",
+      "planner": {"when": {"conditions": ["has_intention('off_topic')"]}, "focus": {"source": "none", "limit": 0}},
+      "renderer": {
+        "instruction": "请先简短承接用户话题，然后把交流拉回事故分诊：现象、影响、严重等级、当前状态与下一步。",
+        "output_hint": "语气温和但坚定，只提出一个最关键的拉回问题。"
+      }
+    },
+    {
+      "act_type": "act_summarize_and_confirm",
+      "description": "总结事故信息并确认下一步处置与复盘准备。",
+      "planner": {"when": {"conditions": ["completion_state == 'ready'"]}, "focus": {"source": "all_slots", "limit": 20}},
+      "renderer": {
+        "instruction": "请总结事故现象、影响面、严重等级、时间线、已采取措施和下一步计划，并请用户确认是否准确。",
+        "output_hint": "输出以总结与确认为主，不要再发散新问题。"
+      },
+      "completion_act": true
+    }
+  ],
+  "turn_pipeline": [
+    {"id": "fix", "act_types": ["act_resolve_conflict", "act_clarify_information", "act_redirect_to_triage"], "limit": 1},
+    {"id": "collect", "act_types": ["act_collect_missing_information"], "limit": 1},
+    {"id": "wrap", "act_types": ["act_summarize_and_confirm"], "limit": 1}
+  ],
+  "checkpoint_catalog": [
+    {
+      "checkpoint_id": "triage_started",
+      "label": "分诊开始",
+      "entry_conditions": [],
+      "freeze_slot_keys": [],
+      "preferred_policy_ids": ["policy_fast_triage"],
+      "preferred_act_types": ["act_collect_missing_information"],
+      "renderer": {"description": "当前处于事故分诊阶段，需要先快速明确现象、影响与严重等级。"}
+    },
+    {
+      "checkpoint_id": "impact_assessed",
+      "label": "影响已评估",
+      "entry_conditions": ["incident_title.status in ['filled','frozen']", "impact.status in ['filled','frozen']"],
+      "freeze_slot_keys": ["incident_title", "impact"],
+      "preferred_policy_ids": ["policy_stabilize_first"],
+      "preferred_act_types": ["act_collect_missing_information", "act_resolve_conflict"],
+      "renderer": {"description": "影响面与现象已较清楚，接下来应聚焦稳定与缓解措施。"}
+    },
+    {
+      "checkpoint_id": "stabilization_in_progress",
+      "label": "稳定推进中",
+      "entry_conditions": [
+        "incident_title.status in ['filled','frozen']",
+        "impact.status in ['filled','frozen']",
+        "severity.status in ['filled','frozen']",
+        "services_affected.status in ['filled','frozen']"
+      ],
+      "freeze_slot_keys": ["incident_title", "impact", "severity", "services_affected"],
+      "preferred_policy_ids": ["policy_stabilize_first"],
+      "preferred_act_types": ["act_collect_missing_information", "act_clarify_information"],
+      "renderer": {"description": "严重等级与受影响服务已明确，应补齐时间线、缓解措施与下一步。"}
+    },
+    {
+      "checkpoint_id": "wrap_up_ready",
+      "label": "收束准备就绪",
+      "entry_conditions": [
+        "incident_title.status in ['filled','frozen']",
+        "impact.status in ['filled','frozen']",
+        "severity.status in ['filled','frozen']",
+        "services_affected.status in ['filled','frozen']",
+        "timeline.status in ['filled','frozen']",
+        "mitigation.status in ['filled','frozen']",
+        "next_steps.status in ['filled','frozen']"
+      ],
+      "freeze_slot_keys": ["incident_title", "impact", "severity", "services_affected", "timeline", "mitigation", "next_steps"],
+      "preferred_policy_ids": ["policy_wrap_up"],
+      "preferred_act_types": ["act_summarize_and_confirm"],
+      "renderer": {
+        "description": "关键事故信息已齐备，可以做一次收束总结并确认下一步与复盘准备。",
+        "completion_instruction": "若当前已无缺口/歧义/冲突，请优先总结并确认是否准确。",
+        "wrap_up_instruction": "收束时先总结关键事实，再确认下一步计划与负责人。"
+      }
+    }
+  ],
+  "intention_catalog": [
+    {"intention_type": "answer_slot", "description": "用户在补充事故信息。", "renderer": {"instruction": "用户正在补充事故关键信息。"}},
+    {"intention_type": "revise_previous_answer", "description": "用户在修正先前说法。", "renderer": {"instruction": "用户正在修正先前信息。"}},
+    {"intention_type": "off_topic", "description": "用户偏离事故处置主线。", "renderer": {"instruction": "用户偏离了事故分诊主线。"}},
+    {"intention_type": "other_request", "description": "用户提出与事故无关的请求。", "renderer": {"instruction": "用户提出了与事故无关的额外请求。"}}
+  ]
+}
