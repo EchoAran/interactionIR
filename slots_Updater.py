@@ -88,20 +88,45 @@ class SlotsUpdater:
         old_status = str(slot.get("status") or "")
         operation = "update"
 
-        if self._is_empty_value(old_value):
-            slot["value"] = new_value
-            slot["status"] = "filled" if not self._is_empty_value(new_value) else "unfilled"
-            operation = "fill"
-        elif old_value == new_value:
-            pass
+        is_array = str(blueprint.get("value_type", "")) == "array" or blueprint.get("allow_multiple_values", False)
+
+        if is_array:
+            import copy
+            old_value_copy = copy.deepcopy(old_value)
+            if not isinstance(old_value, list):
+                old_value = [old_value] if old_value else []
+                
+            items_to_add = new_value if isinstance(new_value, list) else [new_value]
+            added_any = False
+            
+            for item in items_to_add:
+                if not self._is_empty_value(item) and item not in old_value:
+                    old_value.append(item)
+                    added_any = True
+                    
+            if not added_any:
+                return None
+                
+            slot["value"] = old_value
+            slot["status"] = "filled"
+            operation = "fill" if old_status in {"unfilled", "partial"} else "update"
+            old_value_for_log = old_value_copy
         else:
-            if update_rule.get("must_mark_conflict", True):
-                slot["status"] = "conflict"
-                operation = "mark_conflict"
-            else:
+            old_value_for_log = old_value
+            if self._is_empty_value(old_value):
                 slot["value"] = new_value
-                slot["status"] = "filled"
-                operation = "update"
+                slot["status"] = "filled" if not self._is_empty_value(new_value) else "unfilled"
+                operation = "fill"
+            elif old_value == new_value:
+                return None
+            else:
+                if update_rule.get("must_mark_conflict", True):
+                    slot["status"] = "conflict"
+                    operation = "mark_conflict"
+                else:
+                    slot["value"] = new_value
+                    slot["status"] = "filled"
+                    operation = "update"
 
         slot["confidence"] = max(0.0, min(1.0, new_confidence))
         source_turn_ids = slot.setdefault("source_turn_ids", [])
@@ -112,14 +137,14 @@ class SlotsUpdater:
             return {
                 "slot_id": slot.get("slot_id"),
                 "operation": operation,
-                "old_value": old_value,
-                "new_value": old_value,
+                "old_value": old_value_for_log,
+                "new_value": old_value_for_log,
             }
-        if old_value != slot.get("value") or old_status != slot.get("status"):
+        if old_value_for_log != slot.get("value") or old_status != slot.get("status"):
             return {
                 "slot_id": slot.get("slot_id"),
                 "operation": operation,
-                "old_value": old_value,
+                "old_value": old_value_for_log,
                 "new_value": slot.get("value"),
             }
         return None

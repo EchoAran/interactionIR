@@ -7,9 +7,10 @@
       "update_slots",
       "switch_topic",
       "redirect_to_interview",
+      "invoke_actuator",
       "skip_actuator"
     ],
-    "instruction": "优先判断用户当前输入是在补充信息、修正已有信息、切换需求主题、偏离主线，还是提出与当前访谈无关的请求。candidate_slot_values 只提取有直接文本依据的内容，不要臆造。"
+    "instruction": "优先判断用户当前输入是在补充信息、修正已有信息、要求结束访谈，还是提出与当前访谈无关的请求。如果用户明确要求结束访谈并输出文档，将其标记为 finish_interview 意图并使用 invoke_actuator 路由。"
   },
   "slot_blueprint_catalog": [
     {
@@ -337,6 +338,26 @@
   ],
   "act_catalog": [
     {
+      "act_type": "generate_prd",
+      "description": "生成最终的需求文档，结束当前访谈。",
+      "planner": {
+        "priority": 9999,
+        "when": {
+          "intentions_any": ["finish_interview"]
+        },
+        "focus": {
+          "source": "none",
+          "limit": 0
+        }
+      },
+      "renderer": {
+        "instruction": "向用户确认已经收到指令，正在生成PRD，结束当前访谈环节。",
+        "output_hint": "输出明确的结束信号。"
+      },
+      "completion_act": true,
+      "tags": ["finish", "completion"]
+    },
+    {
       "act_type": "act_collect_missing_information",
       "description": "向用户追问当前缺失但关键的信息。",
       "planner": {
@@ -576,6 +597,14 @@
       "route": "skip_actuator",
       "renderer": {
         "instruction": "用户当前提出了与本轮访谈主线无关的请求。"
+      }
+    },
+    {
+      "intention_type": "finish_interview",
+      "description": "用户明确表示当前访谈可以结束，或者要求整理需求文档。",
+      "route": "invoke_actuator",
+      "renderer": {
+        "instruction": "用户请求结束访谈。"
       }
     }
   ]

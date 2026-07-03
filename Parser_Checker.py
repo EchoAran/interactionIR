@@ -207,11 +207,17 @@ class ParserChecker:
     ) -> Dict[str, Any]:
         result: Dict[str, Any] = {}
 
-        parsed_intentions: List[str] = []
+        parsed_intentions: List[Any] = []
         for item in raw.get("parsed_intentions", []) if isinstance(raw.get("parsed_intentions", []), list) else []:
-            value = self._extract_scalar(item, ["intention_type", "id", "value", "name", "type"])
-            if value and value in allowed_intentions and value not in parsed_intentions:
-                parsed_intentions.append(value)
+            # Preserve the entire object if it's a dict, but validate its intention_type
+            if isinstance(item, dict):
+                val = self._extract_scalar(item, ["intention_type", "id", "value", "name", "type"])
+                if val and val in allowed_intentions:
+                    parsed_intentions.append(item)
+            else:
+                val = self._extract_scalar(item, ["intention_type", "id", "value", "name", "type"])
+                if val and val in allowed_intentions and val not in parsed_intentions:
+                    parsed_intentions.append(val)
 
         target_slot_keys: List[str] = []
         for item in raw.get("target_slot_keys", []) if isinstance(raw.get("target_slot_keys", []), list) else []:

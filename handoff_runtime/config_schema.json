@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SubAgentConfig",
+  "type": "object",
+  "properties": {
+    "agent_id": {
+      "type": "string"
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "process_mode": {
+          "type": "string",
+          "enum": ["in_process", "subprocess", "remote"]
+        },
+        "isolation": {
+          "type": "string"
+        },
+        "max_turns": {
+          "type": "integer"
+        },
+        "timeout_seconds": {
+          "type": "integer"
+        },
+        "allow_user_interaction": {
+          "type": "boolean"
+        },
+        "return_mode": {
+          "type": "string"
+        }
+      },
+      "required": ["process_mode"]
+    },
+    "entrypoint": {
+      "type": "object",
+      "properties": {
+        "module": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "required": ["module", "class"]
+    },
+    "config": {
+      "type": "object"
+    }
+  },
+  "required": ["agent_id", "runtime", "entrypoint"]
+}

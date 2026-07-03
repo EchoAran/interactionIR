@@ -20,7 +20,8 @@ class ActsPlanner:
     ) -> Dict[str, Any]:
         current_checkpoint = str(interaction_ir.get("current_checkpoint") or "")
         route = str(parse_result.get("route") or "")
-        intentions = [str(x) for x in parse_result.get("parsed_intentions", []) if x is not None]
+        # Keep intentions in their original form (could be str or dict) to allow robust matching
+        intentions = parse_result.get("parsed_intentions", [])
         completion_state = str(policy_result.get("completion_state") or "not_ready")
         status_groups = self._build_status_groups(interaction_ir, slot_update_result)
 
@@ -100,8 +101,22 @@ class ActsPlanner:
 
         if routes_any and route not in routes_any:
             return False
-        if intentions_any and not any(i in intentions_any for i in intentions):
-            return False
+        if intentions_any:
+            # check if any intention from parse_result matches intentions_any
+            has_match = False
+            for i in intentions:
+                if isinstance(i, str):
+                    if i in intentions_any:
+                        has_match = True
+                        break
+                elif isinstance(i, dict):
+                    # handle the case where intention might be a dict e.g. {"intention_type": "finish_interview", "confidence": 0.98}
+                    i_type = self._extract_id(i, "intention_type")
+                    if i_type in intentions_any:
+                        has_match = True
+                        break
+            if not has_match:
+                return False
         if checkpoints_any and current_checkpoint not in checkpoints_any:
             return False
         if completion_any and completion_state not in completion_any:
